@@ -1,0 +1,40 @@
+{% extends 'library/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-4">
+        <div class="card shadow-lg border-0 rounded-4 p-4 text-center">
+            <h2 class="fw-bold text-primary mb-2">Tekrar Hoş Geldin</h2>
+            <p class="text-muted small mb-4">Kütüphanene erişmek için giriş yap.</p>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <input type="text" name="username" class="form-control rounded-pill border-0 bg-light px-3 py-2" placeholder="Kullanıcı Adı" required>
+                </div>
+                <div class="mb-4">
+                    <input type="password" name="password" class="form-control rounded-pill border-0 bg-light px-3 py-2" placeholder="Şifre" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold shadow mb-3">Giriş Yap</button>
+                
+                <div class="mb-2">
+                    <a href="{% url 'password_reset' %}" class="text-muted small text-decoration-none hover-primary">Şifremi unuttum?</a>
+                </div>
+            </form>
+
+            <div class="text-center mt-3">
+                <p class="small text-muted">Henüz üye değil misin? <a href="{% url 'register' %}" class="text-decoration-none fw-bold">Hemen Kayıt Ol</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-primary:hover {
+        color: #0d6efd !important;
+        text-decoration: underline !important;
+    }
+</style>
+{% endblock %}

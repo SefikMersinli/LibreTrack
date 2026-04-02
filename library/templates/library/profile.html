@@ -1,0 +1,78 @@
+{% extends 'library/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-header bg-primary py-4 text-center">
+                    <h3 class="text-white fw-bold mb-0">👤 Profil Bilgilerim</h3>
+                </div>
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <div class="position-relative d-inline-block">
+                            <img src="{{ user.profile.image.url }}" class="rounded-circle shadow border border-4 border-white" 
+                                 style="width: 150px; height: 150px; object-fit: cover;" id="profilePreview">
+                        </div>
+                        <h2 class="fw-bold mt-3">{{ user.username }}</h2>
+                        <p class="text-muted">{{ user.email }}</p>
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="small fw-bold text-muted">Kullanıcı Adı</label>
+                                {{ u_form.username }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small fw-bold text-muted">E-posta Adresi</label>
+                                {{ u_form.email }}
+                            </div>
+                            <div class="col-12 mt-4">
+                                <label class="small fw-bold text-muted d-block mb-2">Profil Fotoğrafını Değiştir</label>
+                                <div class="input-group">
+                                    {{ p_form.image }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-5">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold shadow">
+                                <i class="bi bi-check2-circle me-2"></i>Değişiklikleri Kaydet
+                            </button>
+                            
+                            <div class="text-center mt-2">
+                                <a href="{% url 'password_change' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-4">
+                                    <i class="bi bi-key me-1"></i> Şifremi Değiştir
+                                </a>
+                            </div>
+
+                            <a href="{% url 'search_books' %}" class="btn btn-light btn-lg rounded-pill fw-bold border mt-2">
+                                İptal Et
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Form inputlarını senin tasarıma uyduralım */
+    input[type="text"], input[type="email"], input[type="file"] {
+        width: 100%;
+        padding: 10px 15px;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+        margin-top: 5px;
+    }
+    input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        outline: none;
+    }
+</style>
+{% endblock %}
