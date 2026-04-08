@@ -1,188 +1,225 @@
 {% extends 'library/base.html' %}
-{% load crispy_forms_tags %}
+
+{% block title %}{{ book.title }} - LibreTrack{% endblock %}
 
 {% block content %}
-<div class="container mt-4 mb-5">
-    <a href="javascript:history.back()" class="btn btn-outline-secondary rounded-pill mb-4 shadow-sm border-0">
-        <i class="bi bi-arrow-left me-2"></i>Geri Dön
+<style>
+    /* KİTAP DETAY SAYFASI ÖZEL STİLLERİ (TEMA DUYARLI) */
+    .detail-card {
+        background-color: var(--card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 1.5rem !important;
+        box-shadow: var(--shadow) !important;
+    }
+
+    /* Yazı renklerini temaya bağlıyoruz */
+    .text-theme-main { color: var(--foreground) !important; }
+    .text-theme-muted { color: var(--muted-foreground) !important; }
+
+    /* Kitap kapağı arkasındaki havalı gölge */
+    .book-cover-glow {
+        box-shadow: 0 0 40px rgba(79, 70, 229, 0.2);
+        border-radius: 10px;
+        transition: transform 0.3s ease;
+    }
+    .book-cover-glow:hover {
+        transform: translateY(-5px);
+    }
+
+    /* İstatistik/Bilgi rozetleri */
+    .info-badge {
+        background-color: var(--secondary) !important;
+        color: var(--foreground) !important;
+        border: 1px solid var(--border) !important;
+        padding: 8px 16px;
+        border-radius: 100px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    /* Yorum kutusu */
+    .comment-input {
+        background-color: var(--background) !important;
+        border: 1px solid var(--border) !important;
+        color: var(--foreground) !important;
+        border-radius: 1rem !important;
+        padding: 1rem !important;
+    }
+    .comment-input::placeholder {
+        color: var(--muted-foreground) !important;
+        opacity: 0.7;
+    }
+    .comment-input:focus {
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1) !important;
+        outline: none;
+    }
+
+    /* Sağ kolon eylem kartları */
+    .action-item {
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.2s;
+        text-decoration: none;
+        color: var(--foreground) !important;
+    }
+    .action-item:hover {
+        background-color: var(--secondary);
+        border-color: var(--primary);
+    }
+</style>
+
+<div class="container fade-in">
+    <a href="{% url 'search_books' %}" class="text-primary text-decoration-none mb-4 d-inline-block fw-bold">
+        <i class="bi bi-arrow-left me-2"></i>Koleksiyona Geri Dön
     </a>
 
     <div class="row g-4">
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-                <div class="row g-0">
-                    <div class="col-md-4 bg-light d-flex align-items-center justify-content-center p-4">
-                        <img src="{{ book.image_url }}" class="img-fluid rounded-3 shadow-lg" style="max-height: 350px; object-fit: cover;" alt="{{ book.title }}">
+            
+            <div class="detail-card p-4 p-md-5 mb-4">
+                <div class="row align-items-center">
+                    <div class="col-md-4 text-center mb-4 mb-md-0">
+                        <img src="{{ book.image_url|default:'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400' }}" 
+                             alt="{{ book.title }}" 
+                             class="img-fluid book-cover-glow" 
+                             style="max-height: 280px; object-fit: cover;">
                     </div>
-                    <div class="col-md-8 p-4">
-                        <h1 class="fw-bold mb-1">{{ book.title }}</h1>
-                        <h4 class="text-muted mb-3 small">{{ book.author }}</h4>
+                    
+                    <div class="col-md-8 text-center text-md-start">
+                        <span class="text-warning fw-bold small text-uppercase tracking-wider mb-2 d-block">
+                            {{ book.categories }}
+                        </span>
+                        <h1 class="font-serif fw-bold text-theme-main mb-2">{{ book.title }}</h1>
+                        <h4 class="text-theme-muted mb-4">{{ book.author }}</h4>
                         
-                        <div class="d-flex flex-wrap gap-2 mb-4">
-                            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-semibold border border-primary-subtle">{{ book.categories }}</span>
-                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2 fw-semibold border border-secondary-subtle"><i class="bi bi-book me-1"></i> {{ book.page_count }} Sayfa</span>
-                            <span class="badge bg-info-subtle text-dark rounded-pill px-3 py-2 fw-semibold border border-info-subtle">{{ book.published_date }}</span>
+                        <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-3 mb-4">
+                            <span class="info-badge"><i class="bi bi-book me-2 opacity-75"></i>{{ book.page_count }} Sayfa</span>
+                            <span class="info-badge"><i class="bi bi-calendar3 me-2 opacity-75"></i>{{ book.published_date|slice:":4" }}</span>
                         </div>
 
-                        <h5 class="fw-bold border-bottom pb-2 mb-3">📖 Kitap Hakkında</h5>
-                        <div class="text-secondary mb-0" style="text-align: justify; line-height: 1.7; font-size: 0.95rem;">
-                            {{ book.description|safe }}
-                        </div>
+                        <h5 class="fw-bold text-theme-main mb-3">Kitap Özeti</h5>
+                        <p class="text-theme-muted" style="line-height: 1.8;">
+                            {{ book.description|truncatechars:400 }}
+                        </p>
                     </div>
                 </div>
             </div>
 
-            <div class="card border-0 shadow-sm rounded-4 p-4 mb-5">
-                <h4 class="fw-bold mb-4 text-primary d-flex align-items-center">
-                    <i class="bi bi-chat-left-text-fill me-2"></i> Okuyucu Yorumları 
-                    <span class="badge bg-primary rounded-pill ms-2 fs-6">{{ comments.count }}</span>
-                </h4>
-                
+            <div class="detail-card p-4 p-md-5 mb-5">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <i class="bi bi-chat-quote-fill fs-2 text-warning"></i>
+                    <h3 class="font-serif fw-bold text-theme-main mb-0">Okuyucu Yorumları</h3>
+                    <span class="badge bg-secondary rounded-pill">{{ comments.count }}</span>
+                </div>
+
                 {% if user.is_authenticated %}
-                    <div class="bg-light rounded-4 p-3 mb-4 border">
-                        <form method="POST">
-                            {% csrf_token %}
-                            {{ comment_form|crispy }}
-                            <div class="text-end mt-2">
-                                <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Paylaş</button>
-                            </div>
-                        </form>
-                    </div>
+                <div class="mb-5 p-4 rounded-4" style="background-color: var(--secondary);">
+                    <h6 class="fw-bold text-theme-main mb-3">Sen ne düşünüyorsun?</h6>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <textarea name="content" class="form-control shadow-none comment-input mb-3" rows="3" placeholder="Kitap hakkında ne düşünüyorsun? Görüşlerini paylaş..." required></textarea>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary px-4 rounded-pill fw-bold">Gönder</button>
+                        </div>
+                    </form>
+                </div>
+                {% else %}
+                <div class="mb-5 p-4 rounded-4 text-center border" style="background-color: var(--secondary);">
+                    <i class="bi bi-lock-fill fs-3 text-muted mb-2"></i>
+                    <p class="text-theme-main mb-3">Yorum yapabilmek için giriş yapmalısın.</p>
+                    <a href="{% url 'login' %}" class="btn btn-primary rounded-pill px-4">Giriş Yap</a>
+                </div>
                 {% endif %}
 
-                <div class="comment-list">
+                <div class="comments-list">
                     {% for comment in comments %}
-                        <div class="d-flex gap-3 mb-4 pb-4 border-bottom last-child-no-border">
-                            <img src="{{ comment.user.profile.image.url }}" class="rounded-circle border" style="width: 48px; height: 48px; object-fit: cover;">
-                            <div class="w-100">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <h6 class="fw-bold mb-0">@{{ comment.user.username }}</h6>
-                                    <small class="text-muted">{{ comment.created_at|timesince }} önce</small>
-                                </div>
-                                <p class="mb-0 text-secondary small">{{ comment.content }}</p>
+                    <div class="d-flex gap-3 mb-4 pb-4 border-bottom" style="border-color: var(--border) !important;">
+                        <img src="{{ comment.user.profile.image.url }}" class="rounded-circle" style="width: 45px; height: 45px; object-fit: cover;" onerror="this.src='https://ui-avatars.com/api/?name={{ comment.user.username }}&background=4f46e5&color=fff'">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <h6 class="fw-bold text-theme-main mb-0">@{{ comment.user.username }}</h6>
+                                <small class="text-theme-muted">{{ comment.created_at|timesince }} önce</small>
                             </div>
+                            <p class="text-theme-main mb-0" style="opacity: 0.85;">{{ comment.content }}</p>
                         </div>
+                    </div>
                     {% empty %}
-                        <div class="text-center py-4 opacity-50">
-                            <i class="bi bi-chat-dots fs-1"></i>
-                            <p class="mt-2">Henüz yorum yapılmamış. İlk yorumu sen yap!</p>
-                        </div>
+                    <div class="text-center py-5 opacity-50">
+                        <i class="bi bi-chat-dots display-4 mb-3 d-block text-theme-main"></i>
+                        <p class="text-theme-main">İlk yorumu sen yaparak topluluğa katkıda bulun!</p>
+                    </div>
                     {% endfor %}
                 </div>
             </div>
         </div>
 
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 mb-4 p-4 bg-dark text-white">
-                <h5 class="fw-bold mb-3 d-flex align-items-center">
-                    <i class="bi bi-lightning-charge-fill text-warning me-2"></i> Hızlı İşlemler
-                </h5>
+            
+            <div class="detail-card p-4 mb-4">
+                <div class="d-flex align-items-center gap-2 mb-4">
+                    <i class="bi bi-lightning-charge-fill fs-4 text-warning"></i>
+                    <h5 class="fw-bold text-theme-main mb-0">Koleksiyona Ekle</h5>
+                </div>
+                
                 {% if user.is_authenticated %}
-                    <form method="POST" action="{% url 'add_to_list' %}" id="detailAddForm">
-                        {% csrf_token %}
-                        <input type="hidden" name="title" value="{{ book.title }}">
-                        <input type="hidden" name="author" value="{{ book.author }}">
-                        <input type="hidden" name="image_url" value="{{ book.image_url }}">
-                        
-                        <label class="small opacity-75 mb-2">Okuma Durumunu Güncelle</label>
-                        <select name="status" class="form-select border-0 mb-3 rounded-3 py-2 shadow-none text-dark">
-                            <option value="plan">Okuyacağım</option>
-                            <option value="reading">Okuyorum</option>
-                            <option value="finished">Bitirdim</option>
-                        </select>
-                        <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm" id="detailSubmitBtn">
-                            <i class="bi bi-plus-circle me-1"></i> Listeme Ekle
-                        </button>
-                    </form>
+                <form method="POST" action="{% url 'add_to_list' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="title" value="{{ book.title }}">
+                    <input type="hidden" name="author" value="{{ book.author }}">
+                    <input type="hidden" name="image_url" value="{{ book.image_url }}">
+                    
+                    <label class="form-label small fw-bold text-theme-main">Okuma Hedefin Nedir?</label>
+                    <select name="status" class="form-select shadow-none comment-input mb-4" style="padding: 0.8rem !important;">
+                        <option value="plan">📅 Okuyacağım</option>
+                        <option value="reading">📖 Okuyorum</option>
+                        <option value="finished">✅ Bitirdim</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm">
+                        <i class="bi bi-plus-circle me-2"></i>Listeme Ekle
+                    </button>
+                </form>
                 {% else %}
-                    <p class="small opacity-75 mb-3">Bu kitabı takip etmek için giriş yapmalısın.</p>
-                    <a href="{% url 'login' %}" class="btn btn-outline-light w-100 rounded-pill fw-bold">Giriş Yap</a>
+                <p class="text-theme-muted small mb-3">Bu kitabı kütüphanene eklemek için aramıza katılmalısın.</p>
+                <a href="{% url 'login' %}" class="btn btn-primary w-100 py-2 rounded-pill fw-bold">Şimdi Giriş Yap</a>
                 {% endif %}
             </div>
 
-            <div class="card border-0 shadow-sm rounded-4 mb-4 p-4">
-                <h6 class="fw-bold mb-3">Arkadaşlarınla Paylaş</h6>
-                <div class="d-grid gap-2">
-                    <button class="btn btn-outline-success rounded-pill text-start px-3" onclick="window.open('https://wa.me/?text=LibreTrack\'te bu kitabı buldum: {{ book.title|escapejs }}', '_blank')">
-                        <i class="bi bi-whatsapp me-2"></i> WhatsApp'tan Gönder
-                    </button>
-                    <button class="btn btn-outline-primary rounded-pill text-start px-3" onclick="copyToClipboard()">
-                        <i class="bi bi-link-45deg me-2"></i> Bağlantıyı Kopyala
+            <div class="detail-card p-4 mb-4">
+                <h6 class="fw-bold text-theme-main mb-3">Arkadaşlarınla Paylaş</h6>
+                <div class="d-flex flex-column gap-3">
+                    <a href="https://api.whatsapp.com/send?text=Şu kitaba bir bak: {{ book.title }} - LibreTrack'te buldum!" target="_blank" class="action-item">
+                        <i class="bi bi-whatsapp fs-4 text-success"></i>
+                        <div>
+                            <h6 class="mb-0 fw-bold">WhatsApp</h6>
+                            <small class="text-theme-muted">Hemen gönder</small>
+                        </div>
+                    </a>
+                    <button onclick="navigator.clipboard.writeText(window.location.href); alert('Bağlantı kopyalandı!');" class="action-item bg-transparent text-start w-100">
+                        <i class="bi bi-link-45deg fs-4 text-primary"></i>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Bağlantıyı Kopyala</h6>
+                            <small class="text-theme-muted">Panoya kaydet</small>
+                        </div>
                     </button>
                 </div>
             </div>
 
-            <div class="card border-0 shadow-sm rounded-4 p-4 border-start border-primary border-5">
-                <h6 class="fw-bold mb-2">💡 Okuma İpucu</h6>
-                <p class="small text-muted mb-0">
-                    {{ book.categories }} kategorisindeki bu eser, okuma listenize harika bir katkı sağlayabilir. Bitirdiğinde puanlamayı unutma!
-                </p>
+            <div class="detail-card p-4" style="border-left: 4px solid var(--warning) !important;">
+                <div class="d-flex gap-3">
+                    <i class="bi bi-lightbulb-fill fs-3 text-warning"></i>
+                    <div>
+                        <h6 class="fw-bold text-theme-main mb-1">Okuma İpucu</h6>
+                        <p class="text-theme-muted small mb-0">Bu eser, kendi kategorisinde derin izler bırakmış bir başyapıt. Bitirdiğinde yıldız vermeyi unutma!</p>
+                    </div>
+                </div>
             </div>
+
         </div>
     </div>
 </div>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    $(document).ready(function() {
-        // Detay Sayfası AJAX Form Gönderimi
-        $('#detailAddForm').on('submit', function(e) {
-            e.preventDefault();
-            const form = $(this);
-            const submitBtn = $('#detailSubmitBtn');
-            
-            submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Bekleyin...');
-
-            $.ajax({
-                type: "POST",
-                url: form.attr('action'),
-                data: form.serialize(),
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                success: function(response) {
-                    submitBtn.removeClass('btn-primary').addClass('btn-success').html('<i class="bi bi-check-lg"></i> Eklendi');
-                    
-                    // base.html'deki Toast'u göster
-                    const toastElement = document.getElementById('liveToast');
-                    const toastMessage = document.getElementById('toastMessage');
-                    if (toastElement) {
-                        const toast = new bootstrap.Toast(toastElement);
-                        toastMessage.innerText = response.message || "Kitap listene eklendi! 📚";
-                        toast.show();
-                    }
-
-                    setTimeout(() => {
-                        submitBtn.prop('disabled', false)
-                                 .removeClass('btn-success')
-                                 .addClass('btn-primary')
-                                 .html('<i class="bi bi-plus-circle me-1"></i> Listeme Ekle');
-                    }, 2500);
-                },
-                error: function() {
-                    alert("Bir hata oluştu.");
-                    submitBtn.prop('disabled', false).html('Tekrar Dene');
-                }
-            });
-        });
-    });
-
-    function copyToClipboard() {
-        navigator.clipboard.writeText(window.location.href);
-        // Toast uyarısı burada da çalışabilir
-        const toastElement = document.getElementById('liveToast');
-        const toastMessage = document.getElementById('toastMessage');
-        const toast = new bootstrap.Toast(toastElement);
-        toastMessage.innerText = "Bağlantı kopyalandı! 🔗";
-        toast.show();
-    }
-</script>
-
-<style>
-    .last-child-no-border:last-child { border-bottom: none !important; }
-    .bg-primary-subtle { background-color: #e0e7ff !important; }
-    .bg-secondary-subtle { background-color: #f1f5f9 !important; }
-    .bg-info-subtle { background-color: #e0f2fe !important; }
-    .text-primary { color: #4f46e5 !important; }
-    #detailCard img { transition: 0.3s; }
-    #detailCard img:hover { transform: scale(1.02); }
-</style>
 {% endblock %}

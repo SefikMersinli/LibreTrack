@@ -2,31 +2,138 @@
 {% block title %}Kayıt Ol - LibreTrack{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-5">
-        <div class="card shadow-lg border-0 rounded-4 p-4">
-            <div class="text-center mb-4">
-                <h2 class="fw-bold text-primary">Aramıza Katıl</h2>
-                <p class="text-muted small">LibreTrack ile okuma serüvenini başlat.</p>
+<style>
+    /* KAYIT KARTI ÖZEL STİLLERİ */
+    .auth-card {
+        background: var(--card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 2rem !important;
+        padding: 3rem !important;
+        box-shadow: var(--shadow) !important;
+    }
+
+    .auth-title {
+        font-family: 'Playfair Display', serif;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        color: var(--foreground) !important;
+    }
+
+    /* FORM INPUT MODERNİZASYONU (Görünmezlik Hatasının Çözüldüğü Yer) */
+    .modern-form input {
+        background-color: var(--background) !important;
+        border: 1.5px solid var(--border) !important;
+        color: var(--foreground) !important; /* Hem aydınlık hem koyu modda okunur */
+        border-radius: 0.85rem !important;
+        padding: 0.8rem 1.2rem !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease;
+    }
+
+    .modern-form input:focus {
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15) !important;
+        outline: none;
+    }
+
+    .modern-form input::placeholder {
+        color: var(--muted-foreground) !important;
+        opacity: 0.6;
+    }
+
+    /* Input üstü etiketler (Kullanıcı adı, Parola vs.) */
+    .modern-form label {
+        color: var(--foreground) !important;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+        display: block;
+    }
+
+    /* Parola kural açıklamaları (Örn: Parola çok kısa) */
+    .help-text {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--muted-foreground) !important;
+        margin-top: 0.4rem;
+        padding-left: 0.2rem;
+    }
+
+    /* Hata mesajları (Kırmızı renkli uyarılar) */
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 5px 0 0 5px;
+        color: #ef4444;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .btn-primary {
+        background-color: var(--primary) !important;
+        border: none !important;
+        color: white !important;
+    }
+
+    .auth-footer-link {
+        color: var(--primary) !important;
+        text-decoration: none;
+        font-weight: 700;
+        transition: 0.2s;
+    }
+
+    .auth-footer-link:hover {
+        opacity: 0.8;
+    }
+</style>
+
+<div class="row justify-content-center align-items-center min-vh-75 fade-in py-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="card auth-card">
+            <div class="text-center mb-5">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
+                     style="width: 60px; height: 60px; background: rgba(79, 70, 229, 0.1);">
+                    <i class="bi bi-person-plus-fill fs-2" style="color: var(--primary);"></i>
+                </div>
+                <h2 class="auth-title mb-2 fs-1">Aramıza Katıl</h2>
+                <p class="small" style="color: var(--muted-foreground);">LibreTrack ile okuma serüvenini profesyonel bir seviyeye taşı.</p>
             </div>
-            <form method="post">
+
+            <form method="post" class="modern-form">
                 {% csrf_token %}
+                
                 {% for field in form %}
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">{{ field.label }}</label>
-                        <input type="{{ field.field.widget.input_type }}" 
-                               name="{{ field.name }}" 
-                               class="form-control rounded-pill border-0 bg-light px-3" 
-                               placeholder="{{ field.label }} giriniz">
+                    <div class="mb-4">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        
+                        {{ field }}
+                        
+                        {% if field.help_text %}
+                            <span class="help-text">{{ field.help_text|safe }}</span>
+                        {% endif %}
+
                         {% if field.errors %}
-                            <div class="text-danger small px-2">{{ field.errors }}</div>
+                            <ul class="errorlist">
+                                {% for error in field.errors %}
+                                    <li><i class="bi bi-exclamation-circle-fill me-1"></i>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
                         {% endif %}
                     </div>
                 {% endfor %}
-                <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold shadow mt-3">Kayıt Ol</button>
+
+                <button type="submit" class="btn btn-primary w-100 py-3 mt-3 rounded-pill shadow-lg fs-5 fw-bold">
+                    <i class="bi bi-rocket-takeoff-fill me-2"></i>Hesabımı Oluştur
+                </button>
             </form>
-            <div class="text-center mt-4">
-                <p class="small text-muted">Zaten hesabın var mı? <a href="{% url 'login' %}" class="text-decoration-none fw-bold">Giriş Yap</a></p>
+
+            <div class="text-center mt-5">
+                <p class="small" style="color: var(--muted-foreground);">
+                    Zaten bir hesabın var mı? 
+                    <a href="{% url 'login' %}" class="auth-footer-link ms-1">
+                        Giriş Yap <i class="bi bi-arrow-right-short"></i>
+                    </a>
+                </p>
             </div>
         </div>
     </div>

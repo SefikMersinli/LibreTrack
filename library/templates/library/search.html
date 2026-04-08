@@ -1,131 +1,248 @@
 {% extends 'library/base.html' %}
+{% load static %}
+
+{% block title %}Keşfet - LibreTrack Digital Library{% endblock %}
 
 {% block content %}
 <style>
-    /* Hero ve Kart Stilleri */
-    .hero-section {
-        background: linear-gradient(-45deg, #6366f1, #a855f7, #ec4899);
-        background-size: 400% 400%;
-        animation: gradientBG 15s ease infinite;
-        border-radius: 30px; padding: 80px 20px; color: white; margin-bottom: 50px;
+    /* 1. HERO & STATS */
+    .hero-container {
+        position: relative;
+        background: linear-gradient(rgba(10, 12, 16, 0.75), rgba(10, 12, 16, 0.95)), 
+                    url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=1200');
+        background-size: cover; background-position: center;
+        border-radius: 2.5rem; padding: 100px 20px; text-align: center;
+        border: 1px solid var(--border); margin-bottom: 60px;
     }
-    @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-    
-    .book-card {
-        border-radius: 20px; transition: all 0.4s ease;
-        border: 1px solid var(--border-color) !important; background: var(--card-bg);
+    .stats-bar {
+        background: var(--card); border: 1px solid var(--border);
+        border-radius: 1.5rem; padding: 25px;
+        margin-top: -60px; position: relative; z-index: 10;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
-    .book-card:hover { transform: translateY(-12px); box-shadow: 0 20px 40px rgba(0,0,0,0.12) !important; }
+    .stat-item h3 { color: var(--primary) !important; font-weight: 900; font-family: 'Playfair Display', serif; }
 
-    /* Sayfalama (Pagination) Stilleri */
-    .page-link { background-color: var(--card-bg); color: var(--text-color); transition: 0.3s; border: none !important; margin: 0 3px; }
-    .page-link:hover { background-color: #0d6efd; color: white !important; }
-    .dark-mode .page-link { background-color: #1e2124; color: #ffffff; }
+    /* 2. SEARCH BOX */
+    .search-box-premium {
+        background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 100px; padding: 8px; max-width: 650px; margin: 0 auto;
+    }
+    .search-input-premium { background: transparent !important; border: none !important; color: white !important; font-size: 1.1rem; }
+
+    /* 3. ATATÜRK ÖZEL BÖLÜMÜ */
+    .ataturk-premium-card {
+        background-color: var(--ataturk-card-bg, var(--card)) !important;
+        border-radius: 2.5rem;
+        padding: 40px 30px; 
+        margin: 60px 0;
+        border: 1px solid rgba(79, 70, 229, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+    .ataturk-premium-card h2, .ataturk-premium-card p {
+        color: var(--ataturk-card-text, var(--foreground)) !important;
+    }
+    .ataturk-badge {
+        background-color: var(--ataturk-badge-bg, var(--primary)) !important;
+        color: var(--ataturk-badge-text, #fff) !important;
+        padding: 8px 20px;
+        border-radius: 100px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        display: inline-block;
+    }
+    .ataturk-portre {
+        width: 180px !important;
+        height: 180px !important;
+        object-fit: cover !important;
+        border-radius: 50% !important;
+        border: 5px solid #fbbf24 !important;
+        box-shadow: 0 0 30px rgba(251, 191, 36, 0.3);
+    }
+
+    /* 4. FEATURES & TESTIMONIALS */
+    .feature-card, .testimonial-card { padding: 30px; border-radius: 2rem; background: var(--card); border: 1px solid var(--border); transition: 0.3s; height: 100%; }
+    .feature-card:hover, .testimonial-card:hover { transform: translateY(-10px); border-color: var(--primary); }
+    .feature-icon { width: 50px; height: 50px; background: rgba(79, 70, 229, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: var(--primary); margin-bottom: 20px; }
+    .user-avatar { width: 45px; height: 45px; border-radius: 50%; margin-right: 12px; object-fit: cover; }
+
+    /* 5. NEWSLETTER & BOOK CARDS */
+    .newsletter-box { background: var(--primary); border-radius: 2rem; padding: 60px; color: white; text-align: center; margin: 80px 0; }
+    .book-card-premium { background: var(--card); border: 1px solid var(--border); border-radius: 1.5rem; transition: 0.4s; overflow: hidden; height: 100%; }
+    .book-img-wrapper { position: relative; overflow: hidden; border-radius: 1.2rem; aspect-ratio: 3/4; margin-bottom: 15px; }
 </style>
 
-<div class="hero-section text-center">
-    <div class="container">
-        <h1 class="fw-bold mb-3 display-4">📖 LibreTrack ile Keşfe Çık</h1>
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <form method="GET" action="{% url 'search_books' %}" id="searchForm" class="d-flex shadow-lg rounded-pill overflow-hidden bg-white p-2 align-items-center">
-                    <input type="text" id="searchInput" name="q" class="form-control border-0 ps-4 shadow-none text-dark" placeholder="Kitap ara..." value="{{ request.GET.q }}">
-                    <button type="button" class="btn text-secondary" onclick="startSpeech()" id="micBtn"><i class="bi bi-mic-fill fs-5"></i></button>
-                    <button class="btn btn-primary px-4 rounded-pill fw-bold ms-2" type="submit">Hadi Ara!</button>
+<div class="container-fluid px-0">
+    <div class="hero-container fade-in">
+        <div class="container">
+            <h1 class="display-3 fw-bold text-white mb-4 font-serif">Your gateway to<br>endless knowledge</h1>
+            <div class="search-box-premium d-flex align-items-center shadow-lg">
+                <i class="bi bi-search ms-4 text-warning fs-5"></i>
+                <form method="GET" action="{% url 'search_books' %}" id="searchForm" class="d-flex w-100 align-items-center">
+                    <input type="text" id="searchInput" name="q" class="form-control search-input-premium ps-3 shadow-none" placeholder="Kitap veya yazar ara..." value="{{ request.GET.q }}">
+                    <button type="button" class="btn text-white-50 me-2" onclick="startSpeech()"><i class="bi bi-mic-fill fs-5"></i></button>
+                    <button class="btn btn-primary px-5 rounded-pill fw-bold" type="submit">Ara</button>
                 </form>
             </div>
         </div>
     </div>
-</div>
 
-<div class="container mb-5">
-    <div id="book-results" class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-        {% for book in books %}
-        <div class="col">
-            <div class="card h-100 shadow-sm p-3 book-card">
-                <img src="{{ book.image_url|default:'https://via.placeholder.com/130x190' }}" class="rounded mx-auto d-block mb-3" style="width: 130px; height: 190px; object-fit: cover;">
-                <div class="card-body d-flex flex-column text-center p-0">
-                    <h6 class="fw-bold mb-1">{{ book.title|truncatechars:35 }}</h6>
-                    <p class="text-muted small mb-3">{{ book.author|truncatechars:25 }}</p>
-                    
-                    <div class="mt-auto">
-                        <a href="{% url 'book_detail' %}?id={{ book.id }}" class="btn btn-outline-secondary btn-sm rounded-pill w-100 mb-2 shadow-sm">
-                            <i class="bi bi-eye-fill me-1"></i> İncele
-                        </a>
-
-                        {% if user.is_authenticated %}
-                        <form method="POST" action="{% url 'add_to_list' %}" class="add-book-form">
-                            {% csrf_token %}
-                            <input type="hidden" name="title" value="{{ book.title }}">
-                            <input type="hidden" name="author" value="{{ book.author }}">
-                            <input type="hidden" name="image_url" value="{{ book.image_url }}">
+    <div class="container">
+        
+        {% if exchange_books %}
+        <div class="my-5 fade-in">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold font-serif mb-0">♻️ Takas Pazarı</h2>
+                <p class="text-muted small mb-0">Üniversiteli arkadaşlarından ödünç al veya takas et.</p>
+            </div>
+            
+            <div class="row row-cols-1 row-cols-md-4 g-4">
+                {% for exchange in exchange_books %}
+                <div class="col">
+                    <div class="card h-100 shadow-sm border-0 position-relative" style="background: var(--secondary);">
+                        <span class="position-absolute top-0 start-0 m-2 badge bg-success shadow-sm" style="font-size: 0.7rem; z-index: 2;">
+                            <i class="bi bi-book me-1"></i>Fiziksel Kopya
+                        </span>
+                        
+                        <div class="p-3 text-center mt-3">
+                            <img src="{{ exchange.book.image_url }}" class="rounded shadow-sm mb-2" style="height: 120px; object-fit: cover;">
+                            <h6 class="fw-bold mb-1" style="color: var(--foreground) !important;">{{ exchange.book.title }}</h6>
                             
-                            <div class="d-grid gap-2">
-                                <select name="status" class="form-select form-select-sm border-0 bg-light text-dark mb-1">
-                                    <option value="plan">Okuyacağım</option>
-                                    <option value="reading">Okuyorum</option>
-                                    <option value="finished">Bitirdim</option>
-                                </select>
-                                <button type="submit" class="btn btn-primary btn-sm rounded-pill shadow-sm">
-                                    <i class="bi bi-plus-circle me-1"></i> Ekle
-                                </button>
+                            <div class="mb-3 mt-2 p-2 rounded-3" style="background: var(--background);">
+                                <small class="text-primary fw-bold d-block">👤 @{{ exchange.user.username }}</small>
+                                <small class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Kampüs İçi Teslim</small>
                             </div>
-                        </form>
-                        {% else %}
-                        <a href="{% url 'login' %}" class="btn btn-primary btn-sm rounded-pill w-100 mb-1">Giriş Yap</a>
-                        {% endif %}
+
+                            <a href="mailto:{{ exchange.user.email }}?subject=LibreTrack Kitap Takası: {{ exchange.book.title }}" 
+                               class="btn btn-sm btn-outline-primary rounded-pill w-100 fw-bold">
+                               <i class="bi bi-envelope-paper-fill me-1"></i> İletişime Geç
+                            </a>
+                        </div>
                     </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="stats-bar mb-5 shadow-sm">
+            <div class="row text-center g-4">
+                <div class="col-md-4 stat-item"><h3>{{ stats.toplam|default:"15k+" }}</h3><p class="text-muted m-0 small fw-bold">KAYITLI KİTAP</p></div>
+                <div class="col-md-4 stat-item border-start border-end"><h3>{{ stats.okuyan|default:"1.2k+" }}</h3><p class="text-muted m-0 small fw-bold">OKUYAN</p></div>
+                <div class="col-md-4 stat-item"><h3>{{ real_comments.count|default:"9.8k" }}</h3><p class="text-muted m-0 small fw-bold">GERÇEK YORUM</p></div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5 pt-5">
+            <div class="col-md-4"><div class="feature-card shadow-sm"><div class="feature-icon"><i class="bi bi-collection"></i></div><h5 class="fw-bold">Vast Collection</h5><p class="text-muted small">Binlerce esere saniyeler içinde ulaşın.</p></div></div>
+            <div class="col-md-4"><div class="feature-card shadow-sm"><div class="feature-icon"><i class="bi bi-chat-dots"></i></div><h5 class="fw-bold">Share Reviews</h5><p class="text-muted small">Düşüncelerini paylaş, topluluğa katkı sağla.</p></div></div>
+            <div class="col-md-4"><div class="feature-card shadow-sm"><div class="feature-icon"><i class="bi bi-shield-check"></i></div><h5 class="fw-bold">Personal Favorites</h5><p class="text-muted small">Kendi özel listelerini kolayca yönet.</p></div></div>
+        </div>
+
+        <div class="ataturk-premium-card shadow-lg">
+            <div class="row align-items-center">
+                <div class="col-lg-4 text-center mb-4 mb-lg-0">
+                    <img id="dailyAtaturk" 
+                         src="{% static 'images/atam.jpg' %}" 
+                         alt="Mustafa Kemal Atatürk" 
+                         class="ataturk-portre shadow-lg">
+                </div>
+                <div class="col-lg-8 text-lg-start text-center"> 
+                    <h2 class="display-5 font-serif fw-bold mb-3">"Hayatta en hakiki mürşit ilimdir."</h2>
+                    <p class="fs-5 mb-4" style="opacity: 0.8;">Gazi Mustafa Kemal Atatürk'ün kitap sevgisi ve bilime verdiği değer, projemizin en büyük ilham kaynağıdır. Bilginin gücüne inanıyoruz.</p>
+                    <span class="ataturk-badge">Atatürk'ün İzinde</span>
                 </div>
             </div>
         </div>
-        {% endfor %}
+
+        <div class="text-center my-5"><h2 class="display-6 fw-bold font-serif">What our readers say</h2></div>
+        <div class="row g-4 mb-5">
+            {% if real_comments %}
+                {% for comment in real_comments %}
+                <div class="col-md-4">
+                    <div class="testimonial-card shadow-sm">
+                        <div class="d-flex mb-3">
+                            <img src="{{ comment.user.profile.image.url }}" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name={{ comment.user.username }}&background=4f46e5&color=fff'">
+                            <div><h6 class="mb-0 fw-bold">@{{ comment.user.username }}</h6><small class="text-muted">{{ comment.created_at|timesince }} önce</small></div>
+                        </div>
+                        <p class="text-muted small italic">"{{ comment.content|truncatechars:100 }}"</p>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12 text-center py-4"><p class="text-muted">Henüz yorum yapılmamış.</p></div>
+            {% endif %}
+        </div>
+
+        <div class="d-flex justify-content-between align-items-end mb-4 pt-4 border-top">
+            <h3 class="fw-bold font-serif mb-0">Popüler Keşifler</h3>
+            <span class="badge bg-primary rounded-pill px-3 shadow-sm">{{ books|length }} Kitap</span>
+        </div>
+        <div id="book-results" class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4 mb-5">
+            {% for book in books %}
+            <div class="col">
+                <div class="card book-card-premium p-3 shadow-sm">
+                    <div class="book-img-wrapper shadow"><img src="{{ book.image_url|default:'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400' }}" class="w-100 h-100 object-fit-cover"></div>
+                    <div class="card-body p-0 d-flex flex-column">
+                        <h6 class="fw-bold text-truncate mb-1">{{ book.title }}</h6>
+                        <p class="text-muted small mb-4">{{ book.author|truncatechars:20 }}</p>
+                        <div class="mt-auto d-grid gap-2">
+                            <a href="{% url 'book_detail' %}?id={{ book.id }}" class="btn btn-outline-primary btn-sm rounded-pill">Detaylar</a>
+                            {% if user.is_authenticated %}
+                            <form method="POST" action="{% url 'add_to_list' %}" class="add-book-form d-grid">
+                                {% csrf_token %}<input type="hidden" name="title" value="{{ book.title }}"><input type="hidden" name="author" value="{{ book.author }}"><input type="hidden" name="image_url" value="{{ book.image_url }}">
+                                <select name="status" class="form-select form-select-sm mb-2 rounded-3 small">
+                                    <option value="plan">📅 Okuyacağım</option><option value="reading">📖 Okuyorum</option><option value="finished">✅ Bitirdim</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary btn-sm rounded-pill">Ekle</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="newsletter-box shadow-lg">
+            <h2 class="fw-bold mb-3">Join our newsletter</h2>
+            <p class="mb-4 opacity-75">Yeni kitaplardan ilk siz haberdar olun.</p>
+            <div class="row justify-content-center">
+                <div class="col-md-7">
+                    <form action="{% url 'newsletter_signup' %}" method="POST">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <input type="email" name="email" class="form-control px-4 border-0 shadow-none" placeholder="E-posta adresiniz..." required style="height: 55px; border-radius: 100px 0 0 100px;">
+                            <button type="submit" class="btn btn-dark px-4 fw-bold" style="border-radius: 0 100px 100px 0;">Kaydet</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <nav aria-label="Page navigation" class="mt-5">
-        <ul class="pagination justify-content-center">
-            {% if books.has_previous %}
-                <li class="page-item"><a class="page-link rounded-pill" href="?q={{ query }}&page=1">«</a></li>
-                <li class="page-item"><a class="page-link rounded-pill" href="?q={{ query }}&page={{ books.previous_page_number }}">Geri</a></li>
-            {% endif %}
-
-            <li class="page-item active">
-                <span class="page-link rounded-pill shadow-sm bg-primary border-0 px-4 text-white">
-                    {{ books.number }} / {{ books.paginator.num_pages }}
-                </span>
-            </li>
-
-            {% if books.has_next %}
-                <li class="page-item"><a class="page-link rounded-pill" href="?q={{ query }}&page={{ books.next_page_number }}">İleri</a></li>
-                <li class="page-item"><a class="page-link rounded-pill" href="?q={{ query }}&page={{ books.paginator.num_pages }}">»</a></li>
-            {% endif %}
-        </ul>
-    </nav>
 </div>
 
 <script>
-    // SESLE ARAMA
     function startSpeech() {
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'tr-TR';
-        recognition.onresult = (e) => {
-            document.getElementById('searchInput').value = e.results[0][0].transcript;
-            document.getElementById('searchForm').submit();
+        const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        rec.lang = 'tr-TR';
+        if (typeof showToast === 'function') showToast('info', 'Dinleniyor... 🎙️');
+        rec.onresult = (e) => { 
+            document.getElementById('searchInput').value = e.results[0][0].transcript; 
+            document.getElementById('searchForm').submit(); 
         };
-        recognition.start();
+        rec.start();
     }
-
-    // AJAX KİTAP EKLEME
     $(document).on('submit', '.add-book-form', function(e) {
         e.preventDefault();
         const form = $(this);
         const card = form.closest('.col');
         $.ajax({
-            type: "POST",
-            url: form.attr('action'),
-            data: form.serialize(),
-            success: function(response) {
-                showToast('success', 'Kitap eklendi! 📚');
-                card.fadeOut(500, function() { $(this).remove(); });
+            type: "POST", url: form.attr('action'), data: form.serialize(),
+            success: function() {
+                if (typeof showToast === 'function') showToast('success', 'Eklendi! ✨');
+                card.animate({ opacity: 0, transform: 'scale(0.8)' }, 400, function() { $(this).remove(); });
             }
         });
     });

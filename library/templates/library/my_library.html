@@ -1,100 +1,194 @@
 {% extends 'library/base.html' %}
 
+{% block title %}Kitaplığım - LibreTrack{% endblock %}
+
 {% block content %}
 <style>
-    /* İstatistik Kartları Karanlık Mod İnce Ayarı */
-.dark-mode .bg-total { background: linear-gradient(135deg, #2d3436 0%, #1e2124 100%) !important; border-left: 8px solid #6c757d; }
-.dark-mode .bg-reading { background: linear-gradient(135deg, #075985 0%, #0c4a6e 100%) !important; border-left: 8px solid #0ea5e9; }
-.dark-mode .bg-finished { background: linear-gradient(135deg, #166534 0%, #14532d 100%) !important; border-left: 8px solid #22c55e; }
-.dark-mode .bg-plan { background: linear-gradient(135deg, #9a3412 0%, #7c2d12 100%) !important; border-left: 8px solid #f97316; }
+    /* MODER DASHBOARD KARTLARI */
+    .stat-card {
+        background: var(--card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 1.5rem !important;
+        transition: all 0.3s ease;
+    }
 
-/* Kartların İçindeki Yazı Renkleri */
-.dark-mode .stat-card h6 { color: #f8fafc !important; opacity: 0.8; }
-.dark-mode .stat-card h2 { color: #ffffff !important; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    /* İSTATİSTİK RENK VURGULARI */
+    .border-total { border-left: 6px solid #64748b !important; }
+    .border-reading { border-left: 6px solid #0ea5e9 !important; }
+    .border-finished { border-left: 6px solid #22c55e !important; }
+    .border-plan { border-left: 6px solid #f59e0b !important; }
 
-/* Diğer Başlıklar */
-.dark-mode h5.fw-bold { color: #ffffff !important; }
+    .stat-value { font-family: 'Playfair Display', serif; color: var(--foreground) !important; }
+
+    /* GRAFİK KONTEYNER */
+    .chart-container { position: relative; height: 250px; width: 100%; }
+
+    /* FİLTRE BUTONLARI */
+    .filter-btn {
+        border-radius: 100px;
+        padding: 8px 24px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted-foreground) !important;
+    }
+    .filter-btn.active {
+        background: var(--primary) !important;
+        color: var(--primary-foreground, #fff) !important;
+        border-color: var(--primary) !important;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+
+    /* KİTAP LİSTESİ KARTLARI */
+    .book-item-card {
+        background: var(--card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 1.25rem !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 100%;
+    }
+    .book-item-card:hover {
+        transform: translateX(5px);
+        border-color: var(--primary) !important;
+    }
+
+    .book-thumb {
+        width: 100px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 0.75rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    /* DURUM SEÇİCİ */
+    .status-select-modern {
+        background-color: var(--background) !important;
+        color: var(--foreground) !important;
+        border: 1px solid var(--border) !important;
+        cursor: pointer;
+    }
+
+    .book-title-lib {
+        color: var(--foreground) !important;
+        font-weight: 700;
+    }
 </style>
 
-<div class="container mt-4 mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold mb-0">📚 Kitaplığım</h2>
-        <a href="{% url 'search_books' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
-            <i class="bi bi-search me-2"></i>Yeni Kitap Bul
+<div class="container mt-2 mb-5 fade-in">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-5">
+        <div>
+            <h1 class="font-serif fw-bold mb-1 display-5">📚 Kitaplığım</h1>
+            <p class="text-muted-foreground m-0" style="color: var(--muted-foreground);">Kişisel okuma yolculuğun ve istatistiklerin.</p>
+        </div>
+        <a href="{% url 'search_books' %}" class="btn btn-primary px-4 py-3 d-flex align-items-center gap-2 shadow rounded-pill fw-bold">
+            <i class="bi bi-plus-lg fs-5"></i>
+            <span>Yeni Kitap Keşfet</span>
         </a>
     </div>
 
-    <div class="row mb-5 g-4 align-items-center">
+    <div class="row mb-5 g-4">
         <div class="col-lg-5">
-            <div class="card shadow-sm p-4 text-center rounded-4 border-0 h-100">
-                <h5 class="fw-bold mb-3">📊 Okuma Analizi</h5>
+            <div class="card stat-card p-4 h-100 shadow-sm">
+                <h5 class="font-serif fw-bold mb-4 text-center">📊 Okuma Analizi</h5>
                 {% if stats.toplam > 0 %}
                 <div class="chart-container">
                     <canvas id="readingChart"></canvas>
                 </div>
                 {% else %}
-                <div class="d-flex flex-column justify-content-center h-100 opacity-50 py-4">
-                    <i class="bi bi-pie-chart text-muted display-4 mb-3"></i>
-                    <p class="text-muted mb-0">Veri oluşturmak için kitap ekleyin.</p>
+                <div class="d-flex flex-column justify-content-center align-items-center h-100 opacity-40">
+                    <i class="bi bi-bar-chart-steps display-1 mb-3"></i>
+                    <p>Henüz veri toplanmadı.</p>
                 </div>
                 {% endif %}
             </div>
         </div>
 
         <div class="col-lg-7">
-            <div class="row g-3 h-100">
-                <div class="col-sm-6"><div class="card stat-card bg-total shadow-sm p-3 h-100 text-center"><h6 class="text-muted small fw-bold">Toplam Kayıt</h6><h2 class="fw-bold mb-0 display-5">{{ stats.toplam }}</h2></div></div>
-                <div class="col-sm-6"><div class="card stat-card bg-reading shadow-sm p-3 h-100 text-center"><h6 class="text-info small fw-bold">Şu An Okunuyor</h6><h2 class="fw-bold text-info mb-0 display-5">{{ stats.okunuyor }}</h2></div></div>
-                <div class="col-sm-6"><div class="card stat-card bg-finished shadow-sm p-3 h-100 text-center"><h6 class="text-success small fw-bold">Bitirilenler</h6><h2 class="fw-bold text-success mb-0 display-5">{{ stats.bitti }}</h2></div></div>
-                <div class="col-sm-6"><div class="card stat-card bg-plan shadow-sm p-3 h-100 text-center"><h6 class="text-warning small fw-bold">Planlananlar</h6><h2 class="fw-bold text-warning mb-0 display-5">{{ stats.plan }}</h2></div></div>
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <div class="card stat-card border-total p-4">
+                        <h6 class="text-muted small text-uppercase fw-bold mb-2">Toplam Kayıt</h6>
+                        <h2 class="stat-value mb-0 display-4">{{ stats.toplam }}</h2>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="card stat-card border-reading p-4">
+                        <h6 class="text-info small text-uppercase fw-bold mb-2">Şu An Okunuyor</h6>
+                        <h2 class="stat-value text-info mb-0 display-4">{{ stats.okunuyor }}</h2>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="card stat-card border-finished p-4">
+                        <h6 class="text-success small text-uppercase fw-bold mb-2">Bitirilenler</h6>
+                        <h2 class="stat-value text-success mb-0 display-4">{{ stats.bitti }}</h2>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="card stat-card border-plan p-4">
+                        <h6 class="text-warning small text-uppercase fw-bold mb-2">Planlananlar</h6>
+                        <h2 class="stat-value text-warning mb-0 display-4">{{ stats.plan }}</h2>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     {% if user_books %}
-    <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
-        <button class="btn btn-dark active filter-btn px-4" onclick="filterBooks('all', this)">Tümü</button>
-        <button class="btn btn-outline-info filter-btn px-4" onclick="filterBooks('reading', this)">Okuyorum</button>
-        <button class="btn btn-outline-success filter-btn px-4" onclick="filterBooks('finished', this)">Bitenler</button>
-        <button class="btn btn-outline-warning filter-btn px-4" onclick="filterBooks('plan', this)">Planlananlar</button>
+    <div class="d-flex justify-content-center flex-wrap gap-3 mb-5">
+        <button class="filter-btn active" onclick="filterBooks('all', this)">Tümü</button>
+        <button class="filter-btn" onclick="filterBooks('reading', this)">📖 Okuyorum</button>
+        <button class="filter-btn" onclick="filterBooks('finished', this)">✅ Bitenler</button>
+        <button class="filter-btn" onclick="filterBooks('plan', this)">📅 Planlananlar</button>
     </div>
 
-    <div class="row row-cols-1 row-cols-lg-2 g-4" id="book-container">
+    <div class="row row-cols-1 row-cols-xl-2 g-4" id="book-container">
         {% for ub in user_books %}
         <div class="col book-item" data-status="{{ ub.status }}" id="book-card-{{ ub.id }}">
-            <div class="card h-100 border-0 shadow-sm p-3 rounded-4">
-                <div class="d-flex align-items-center">
-                    <img src="{{ ub.book.image_url|default:'https://via.placeholder.com/90x135?text=Kapak+Yok' }}" class="book-thumb shadow-sm me-4">
-                    <div class="flex-grow-1">
-                        <h5 class="fw-bold mb-1">{{ ub.book.title }}</h5>
-                        <p class="text-muted small mb-2">{{ ub.book.author }}</p>
+            <div class="card book-item-card p-3 shadow-sm">
+                <div class="d-flex align-items-start gap-4">
+                    <img src="{{ ub.book.image_url|default:'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=200' }}" class="book-thumb">
+                    
+                    <div class="flex-grow-1 h-100 d-flex flex-column">
+                        <div class="mb-2">
+                            <h5 class="book-title-lib font-serif mb-1">{{ ub.book.title }}</h5>
+                            <p class="small" style="color: var(--muted-foreground);">{{ ub.book.author }}</p>
+                        </div>
                         
-                        <div class="mb-3" style="min-height: 24px;">
+                        <div class="mb-4">
                             <div class="star-rating {% if ub.status != 'finished' %}d-none{% endif %}" data-ubid="{{ ub.id }}">
                                 {% for i in "12345" %}
-                                <i class="bi bi-star{% if ub.rating >= forloop.counter|add:0 %}-fill text-warning{% endif %} rating-star" 
-                                   data-val="{{ forloop.counter }}" style="cursor: pointer; font-size: 1.2rem;"></i>
+                                <i class="bi bi-star{% if ub.rating >= forloop.counter %} -fill text-warning{% endif %} rating-star me-1" 
+                                   data-val="{{ forloop.counter }}" style="cursor: pointer; font-size: 1.3rem;"></i>
                                 {% endfor %}
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-between align-items-center">
-                            <form class="status-update-form m-0 p-0" action="{% url 'add_to_list' %}">
+                        <div class="mt-auto d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <form class="status-update-form m-0" action="{% url 'add_to_list' %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="title" value="{{ ub.book.title }}">
                                 <input type="hidden" name="author" value="{{ ub.book.author }}">
                                 <input type="hidden" name="image_url" value="{{ ub.book.image_url }}">
-                                <select name="status" class="form-select form-select-sm rounded-pill border-0 shadow-sm fw-bold status-select 
-                                    {% if ub.status == 'reading' %}bg-info text-dark
-                                    {% elif ub.status == 'finished' %}bg-success text-white
-                                    {% else %}bg-warning text-dark{% endif %}" 
-                                    data-original="{{ ub.status }}" style="width: 140px;">
+                                <select name="status" class="form-select form-select-sm rounded-pill status-select-modern px-3 fw-bold shadow-none" 
+                                    onchange="handleStatusChange(this)">
                                     <option value="plan" {% if ub.status == 'plan' %}selected{% endif %}>📅 Planlandı</option>
                                     <option value="reading" {% if ub.status == 'reading' %}selected{% endif %}>📖 Okuyorum</option>
                                     <option value="finished" {% if ub.status == 'finished' %}selected{% endif %}>✅ Bitti</option>
                                 </select>
                             </form>
-                            <button onclick="confirmDelete('{% url 'delete_book' ub.id %}', {{ ub.id }})" class="btn btn-link text-danger p-0"><i class="bi bi-trash3-fill fs-5"></i></button>
+                            
+                            <div class="d-flex align-items-center gap-2 mt-2 mt-sm-0">
+                                <button class="btn btn-sm {% if ub.is_exchangeable %}btn-success{% else %}btn-outline-secondary{% endif %} toggle-exchange-btn rounded-pill px-3 fw-bold shadow-none" 
+                                        data-id="{{ ub.id }}">
+                                    {% if ub.is_exchangeable %}🤝 Takaslık{% else %}🔓 Takasa Aç{% endif %}
+                                </button>
+
+                                <button onclick="confirmDelete('{% url 'delete_book' ub.id %}', {{ ub.id }})" 
+                                        class="btn btn-link text-danger p-0 shadow-none" title="Sil">
+                                    <i class="bi bi-trash3-fill fs-4"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -102,72 +196,76 @@
         </div>
         {% endfor %}
     </div>
+    {% else %}
+    <div class="text-center py-5 opacity-50">
+        <i class="bi bi-inboxes display-1 mb-3"></i>
+        <h3>Kütüphanen henüz boş...</h3>
+        <p>Hemen yeni kitaplar aramaya ne dersin?</p>
+    </div>
     {% endif %}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<script>
-    // Global değişkenimiz (Grafik için)
-    window.myChart = null;
-
-    // 1. GRAFİK BAŞLATMA
+    // 1. GRAFİK KURULUMU
     $(document).ready(function() {
-        // Okuma analiz grafiği var mı kontrol et
         const chartElement = document.getElementById('readingChart');
         if(chartElement) {
             const ctx = chartElement.getContext('2d');
-            window.myChart = new Chart(ctx, {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            
+            new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: ['Planlanan', 'Okunan', 'Biten'],
                     datasets: [{
-                        data: [{{ stats.plan|default:0 }}, {{ stats.okunuyor|default:0 }}, {{ stats.bitti|default:0 }}],
-                        backgroundColor: ['#f97316', '#0ea5e9', '#22c55e'],
-                        borderWidth: 0
+                        data: [{{ stats.plan }}, {{ stats.okunuyor }}, {{ stats.bitti }}],
+                        backgroundColor: ['#f59e0b', '#0ea5e9', '#22c55e'],
+                        borderWidth: 0,
+                        hoverOffset: 15
                     }]
                 },
                 options: { 
-                    cutout: '70%', 
-                    plugins: { legend: { position: 'bottom' } },
+                    cutout: '75%', 
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom',
+                            labels: { 
+                                color: isDark ? '#94a3b8' : '#64748b', 
+                                font: { family: 'DM Sans', weight: 'bold' } 
+                            }
+                        } 
+                    },
                     responsive: true,
-                    maintainAspectRatio: false // Grafiğin kutuya tam oturması için
+                    maintainAspectRatio: false
                 }
             });
         }
     });
 
-    // 2. DURUM GÜNCELLEME (AJAX)
-    $(document).on('change', '.status-select', function() {
-        const select = $(this);
-        const form = select.closest('form');
-        
+    // 2. DURUM DEĞİŞİKLİĞİ (AJAX)
+    function handleStatusChange(select) {
+        const form = $(select).closest('form');
         $.ajax({
             type: "POST",
             url: form.attr('action'),
             data: form.serialize(),
             success: function() {
-                // Sadece sayfayı yenile, her şey (sayılar ve grafik) kendiliğinden düzelecek
-                window.location.reload(); 
+                if (typeof showToast === 'function') showToast('success', 'Durum Güncellendi! 📈');
+                setTimeout(() => window.location.reload(), 800);
             }
         });
-    });
+    }
 
-    // 3. ÇÖP KUTUSU (SİLME)
+    // 3. SİLME ONAYI
     function confirmDelete(deleteUrl, bookId) {
-        if (confirm("Bu kitabı kütüphanenizden kaldırmak istediğinize emin misiniz?")) {
+        if (confirm("Bu kitap kütüphanenden kalıcı olarak silinecek. Emin misin?")) {
             $.ajax({
                 type: "POST",
                 url: deleteUrl,
                 data: { 'csrfmiddlewaretoken': '{{ csrf_token }}' },
                 success: function() {
-                    window.location.reload(); // Silince de sayfayı yenile
+                    $(`#book-card-${bookId}`).fadeOut(400, () => window.location.reload());
                 }
             });
         }
@@ -188,22 +286,53 @@
                 'csrfmiddlewaretoken': '{{ csrf_token }}' 
             },
             success: function() {
+                if (typeof showToast === 'function') showToast('success', 'Puanın kaydedildi! ⭐');
                 window.location.reload();
             }
         });
     });
 
-    // 5. FİLTRELEME (Okuyorum, Bitenler vs.)
+    // 5. FİLTRELEME
     function filterBooks(status, btn) {
-        $('.filter-btn').removeClass('btn-dark active').addClass('btn-outline-secondary');
-        $(btn).removeClass('btn-outline-secondary').addClass('btn-dark active');
+        $('.filter-btn').removeClass('active');
+        $(btn).addClass('active');
+        
         if (status === 'all') {
-            $('.book-item').fadeIn();
+            $('.book-item').fadeIn(400);
         } else {
             $('.book-item').hide();
-            $(`.book-item[data-status="${status}"]`).fadeIn();
+            $(`.book-item[data-status="${status}"]`).fadeIn(400);
         }
     }
-</script>
+
+    // 6. TAKAS BUTONU İŞLEMİ (AJAX)
+    $(document).on('click', '.toggle-exchange-btn', function(e) {
+        e.preventDefault();
+        const btn = $(this);
+        const ubId = btn.data('id');
+        
+        // İşlem bitene kadar butonu kilitle
+        btn.prop('disabled', true);
+        
+        $.ajax({
+            url: `/toggle-exchange/${ubId}/`,
+            type: 'GET',
+            headers: {'X-Requested-With': 'XMLHttpRequest'},
+            success: function(data) {
+                btn.prop('disabled', false); // Kilidi aç
+                if (data.is_exchangeable) {
+                    btn.removeClass('btn-outline-secondary').addClass('btn-success').html('🤝 Takaslık');
+                    if (typeof showToast === 'function') showToast('success', 'Kitap takasa açıldı! ♻️');
+                } else {
+                    btn.removeClass('btn-success').addClass('btn-outline-secondary').html('🔓 Takasa Aç');
+                    if (typeof showToast === 'function') showToast('info', 'Kitap takas listesinden çıkarıldı.');
+                }
+            },
+            error: function(err) {
+                btn.prop('disabled', false);
+                console.error("Takas Hatası:", err);
+            }
+        });
+    });
 </script>
 {% endblock %}

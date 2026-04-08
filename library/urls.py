@@ -1,8 +1,11 @@
 from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views
+from django.urls import path
+from . import views
 
 urlpatterns = [
+    # Ana Fonksiyonlar
     path('search/', views.search_view, name='search_books'),
     path('add/', views.add_to_list, name='add_to_list'),
     path('library/', views.my_library_view, name='my_library'),
@@ -10,20 +13,19 @@ urlpatterns = [
     path('book-detail/', views.book_detail_view, name='book_detail'),
     path('update-rating/', views.update_rating, name='update_rating'),
     
-    # Kullanıcı İşlemleri
+    # Kullanıcı Kayıt ve Giriş/Çıkış
     path('register/', views.register_view, name='register'),
     path('login/', auth_views.LoginView.as_view(template_name='library/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    # Logout sonrası ana sayfaya veya girişe yönlendirme için
+    path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
     
-    # PROFIL VE SIFRE (Burayı Değiştirdim)
+    # Profil ve Güvenlik
     path('profile/', views.profile_view, name='profile'),
-    path('sifre-guncelle/', views.change_password, name='password_change'), 
+    path('password-change/', views.change_password, name='password_change'), 
 
-
-
-    # ŞİFRE SIFIRLAMA ADIMLARI
+    # Şifre Sıfırlama (E-posta ile)
     path('password-reset/', 
-         auth_views.PasswordResetView.as_view(template_name='library/password_reset.html'),
+         auth_views.PasswordResetView.as_view(template_name='library/password_reset_form.html'),
          name='password_reset'),
     path('password-reset/done/', 
          auth_views.PasswordResetDoneView.as_view(template_name='library/password_reset_done.html'),
@@ -34,4 +36,9 @@ urlpatterns = [
     path('password-reset-complete/', 
          auth_views.PasswordResetCompleteView.as_view(template_name='library/password_reset_complete.html'),
          name='password_reset_complete'),
+
+     path('newsletter-kayit/', views.newsletter_signup, name='newsletter_signup'),
+
+
+     path('toggle-exchange/<int:pk>/', views.toggle_exchange, name='toggle_exchange'),
 ]

@@ -2,77 +2,166 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-                <div class="card-header bg-primary py-4 text-center">
-                    <h3 class="text-white fw-bold mb-0">👤 Profil Bilgilerim</h3>
-                </div>
-                <div class="card-body p-5">
-                    <div class="text-center mb-4">
-                        <div class="position-relative d-inline-block">
-                            <img src="{{ user.profile.image.url }}" class="rounded-circle shadow border border-4 border-white" 
-                                 style="width: 150px; height: 150px; object-fit: cover;" id="profilePreview">
-                        </div>
-                        <h2 class="fw-bold mt-3">{{ user.username }}</h2>
-                        <p class="text-muted">{{ user.email }}</p>
-                    </div>
+<style>
+    /* PROFİL KARTI ANA YAPI */
+    .profile-card {
+        background: var(--card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 2rem !important;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        margin-bottom: 2rem;
+    }
 
-                    <form method="POST" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="small fw-bold text-muted">Kullanıcı Adı</label>
-                                {{ u_form.username }}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="small fw-bold text-muted">E-posta Adresi</label>
-                                {{ u_form.email }}
-                            </div>
-                            <div class="col-12 mt-4">
-                                <label class="small fw-bold text-muted d-block mb-2">Profil Fotoğrafını Değiştir</label>
-                                <div class="input-group">
+    .profile-header-gradient {
+        background: linear-gradient(135deg, #6366f1 0%, #fbbf24 100%);
+        height: 120px;
+        position: relative;
+    }
+
+    .profile-avatar-wrapper {
+        margin-top: -75px;
+        position: relative;
+        z-index: 10;
+        text-align: center;
+    }
+
+    .profile-avatar {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border: 6px solid var(--card);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        background: white;
+    }
+
+    /* INPUT VE OKUNABİLİRLİK SİSTEMİ */
+    .modern-input .form-control {
+        background-color: var(--background) !important;
+        border: 1px solid var(--border) !important;
+        color: var(--foreground) !important;
+        border-radius: 0.75rem !important;
+        padding: 0.75rem 1rem !important;
+        font-weight: 500;
+    }
+
+    .modern-input label {
+        color: var(--foreground) !important;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        display: block;
+    }
+
+    /* DOSYA YÜKLEME ALANI */
+    .file-upload-wrapper {
+        border: 2px dashed var(--border);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        background: rgba(99, 102, 241, 0.03);
+    }
+
+    input[type="file"]::file-selector-button {
+        background: var(--secondary);
+        color: var(--foreground);
+        border: 1px solid var(--border);
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-right: 10px;
+    }
+
+    .btn-save {
+        background-color: var(--primary) !important;
+        color: white !important;
+        border: none;
+        font-weight: 700;
+    }
+</style>
+
+<div class="row justify-content-center fade-in mt-4">
+    <div class="col-lg-8 col-md-10">
+        <div class="card profile-card shadow-lg">
+            <div class="profile-header-gradient"></div>
+
+            <div class="card-body p-4 p-md-5">
+                <div class="profile-avatar-wrapper mb-5">
+                    <img src="{{ user.profile.image.url }}" 
+                         class="rounded-circle profile-avatar mb-3" 
+                         id="profilePreview" 
+                         onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ user.username }}&background=6366f1&color=fff'">
+                    
+                    <h2 class="fw-bold mb-1">{{ user.username }}</h2>
+                    <p class="text-muted small">{{ user.email }}</p>
+                    
+                    <div class="badge bg-warning text-dark rounded-pill px-3 py-2 mt-2 shadow-sm">
+                        <i class="bi bi-patch-check-fill me-1"></i> LibreTrack Gold Üye
+                    </div>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data" class="modern-input">
+                    {% csrf_token %}
+                    
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label>Kullanıcı Adı</label>
+                            <input type="text" name="username" value="{{ user.username }}" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label>E-posta Adresi</label>
+                            <input type="email" name="email" value="{{ user.email }}" class="form-control">
+                        </div>
+                        
+                        <div class="col-12 mt-4">
+                            <div class="file-upload-wrapper text-center">
+                                <label class="mb-3 d-block"><i class="bi bi-image me-2"></i>Profil Fotoğrafını Değiştir</label>
+                                <div class="small">
                                     {{ p_form.image }}
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="mt-5">
+                        <button type="submit" class="btn btn-save btn-lg w-100 py-3 mb-4 shadow">
+                            <i class="bi bi-save2 me-2"></i> Güncellemeleri Kaydet
+                        </button>
                         
-                        <div class="d-grid gap-2 mt-5">
-                            <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold shadow">
-                                <i class="bi bi-check2-circle me-2"></i>Değişiklikleri Kaydet
-                            </button>
-                            
-                            <div class="text-center mt-2">
-                                <a href="{% url 'password_change' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-4">
-                                    <i class="bi bi-key me-1"></i> Şifremi Değiştir
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <a href="{% url 'password_change' %}" class="btn btn-outline-primary w-100 py-2 rounded-pill small fw-bold">
+                                    <i class="bi bi-shield-lock me-1"></i> Şifre Değiştir
                                 </a>
                             </div>
-
-                            <a href="{% url 'search_books' %}" class="btn btn-light btn-lg rounded-pill fw-bold border mt-2">
-                                İptal Et
-                            </a>
+                            <div class="col-6">
+                                <a href="{% url 'my_library' %}" class="btn btn-outline-secondary w-100 py-2 rounded-pill small fw-bold">
+                                    <i class="bi bi-arrow-left me-1"></i> Kitaplığa Dön
+                                </a>
+                            </div>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
+        </div>
+
+        <div class="text-center opacity-50">
+            <p class="small">LibreTrack Üyeliği: {{ user.date_joined|date:"d F Y" }}</p>
         </div>
     </div>
 </div>
 
-<style>
-    /* Form inputlarını senin tasarıma uyduralım */
-    input[type="text"], input[type="email"], input[type="file"] {
-        width: 100%;
-        padding: 10px 15px;
-        border-radius: 10px;
-        border: 1px solid #dee2e6;
-        margin-top: 5px;
+<script>
+    // Anlık Fotoğraf Önizleme
+    const fileInput = document.querySelector('input[type="file"]');
+    if(fileInput) {
+        fileInput.onchange = function (evt) {
+            const [file] = this.files
+            if (file) {
+                document.getElementById('profilePreview').src = URL.createObjectURL(file)
+            }
+        }
     }
-    input:focus {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        outline: none;
-    }
-</style>
+</script>
 {% endblock %}

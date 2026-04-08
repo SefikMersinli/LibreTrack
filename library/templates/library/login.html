@@ -1,40 +1,108 @@
 {% extends 'library/base.html' %}
-{% load crispy_forms_tags %}
+{% block title %}Giriş Yap - LibreTrack{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-4">
-        <div class="card shadow-lg border-0 rounded-4 p-4 text-center">
-            <h2 class="fw-bold text-primary mb-2">Tekrar Hoş Geldin</h2>
-            <p class="text-muted small mb-4">Kütüphanene erişmek için giriş yap.</p>
+<style>
+    /* GİRİŞ KARTI */
+    .auth-card {
+        background: var(--card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 2rem !important;
+        padding: 3.5rem 3rem !important;
+        box-shadow: var(--shadow) !important;
+    }
 
-            <form method="post">
+    .auth-title {
+        font-family: 'Playfair Display', serif;
+        font-weight: 900;
+        color: var(--foreground) !important;
+    }
+
+    /* INPUT KUTULARI - HER İKİ MOD İÇİN DÜZELTME */
+    .modern-form .form-control {
+        background-color: var(--background) !important;
+        border: 1.5px solid var(--border) !important;
+        color: var(--foreground) !important; /* YAZI RENGİ BURADA */
+        border-radius: 0.85rem !important;
+        padding: 1rem 1.2rem !important;
+        transition: all 0.2s ease;
+        font-weight: 500 !important;
+    }
+
+    .modern-form .form-control:focus {
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1) !important;
+    }
+
+    /* Placeholder rengini biraz soluk yapalım */
+    .modern-form .form-control::placeholder {
+        color: var(--muted-foreground) !important;
+        opacity: 0.7;
+    }
+
+    .auth-footer-link {
+        color: var(--primary) !important;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background-color: #4f46e5 !important;
+        border: none !important;
+        color: white !important;
+    }
+</style>
+
+<div class="row justify-content-center align-items-center min-vh-75 fade-in">
+    <div class="col-md-6 col-lg-4">
+        <div class="card auth-card">
+            <div class="text-center mb-5">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
+                     style="width: 60px; height: 60px; background: rgba(79, 70, 229, 0.1);">
+                    <i class="bi bi-shield-lock-fill text-primary fs-2"></i>
+                </div>
+                <h2 class="auth-title mb-2 fs-1">Tekrar Hoş Geldin</h2>
+                <p class="small" style="color: var(--muted-foreground);">Kütüphanene erişmek için giriş yap.</p>
+            </div>
+
+            <form method="post" class="modern-form">
                 {% csrf_token %}
-                <div class="mb-3">
-                    <input type="text" name="username" class="form-control rounded-pill border-0 bg-light px-3 py-2" placeholder="Kullanıcı Adı" required>
-                </div>
+                
+                {% if form.errors %}
+                    <div class="alert alert-danger border-0 rounded-3 small py-2 mb-4" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                        <i class="bi bi-exclamation-circle-fill me-2"></i>
+                        Kullanıcı adı veya şifre hatalı.
+                    </div>
+                {% endif %}
+                
                 <div class="mb-4">
-                    <input type="password" name="password" class="form-control rounded-pill border-0 bg-light px-3 py-2" placeholder="Şifre" required>
+                    <label class="form-label small fw-bold">Kullanıcı Adı</label>
+                    <input type="text" name="username" class="form-control shadow-none" placeholder="Kullanıcı adınızı girin" required>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold shadow mb-3">Giriş Yap</button>
-                
                 <div class="mb-2">
-                    <a href="{% url 'password_reset' %}" class="text-muted small text-decoration-none hover-primary">Şifremi unuttum?</a>
+                    <label class="form-label small fw-bold">Şifre</label>
+                    <input type="password" name="password" class="form-control shadow-none" placeholder="••••••••" required>
                 </div>
+
+                <div class="text-end mb-4">
+                    <a href="{% url 'password_reset' %}" class="text-muted text-decoration-none small">
+                        Şifremi unuttum?
+                    </a>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill shadow-lg fs-5 fw-bold">
+                    Giriş Yap <i class="bi bi-box-arrow-in-right ms-2"></i>
+                </button>
             </form>
 
-            <div class="text-center mt-3">
-                <p class="small text-muted">Henüz üye değil misin? <a href="{% url 'register' %}" class="text-decoration-none fw-bold">Hemen Kayıt Ol</a></p>
+            <div class="text-center mt-5">
+                <p class="small" style="color: var(--muted-foreground);">
+                    Henüz üye değil misin? 
+                    <a href="{% url 'register' %}" class="auth-footer-link ms-1">Hemen Kayıt Ol</a>
+                </p>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    .hover-primary:hover {
-        color: #0d6efd !important;
-        text-decoration: underline !important;
-    }
-</style>
 {% endblock %}
