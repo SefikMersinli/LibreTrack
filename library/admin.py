@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Book, UserBook
+from .models import Book, UserBook, ChatMessage
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
@@ -23,5 +23,13 @@ class UserBookAdmin(admin.ModelAdmin):
     # Admin panelinden direkt durum değiştirilebilsin
     list_editable = ('status',)
 
-# Not: admin.site.register(Book) satırlarını silebilirsin, 
-# yukarıdaki @admin.register dekoratörü zaten bu işi yapıyor.
+@admin.register(ChatMessage)
+class ChatMessageAdmin(admin.ModelAdmin):
+    # Mesajı gönderen, mesaj içeriği ve tarih sütunlarda görünsün
+    list_display = ('user', 'content', 'timestamp')
+    # Tarihe ve kullanıcıya göre filtreleme yapabilelim
+    list_filter = ('timestamp', 'user')
+    # Mesaj içeriğinde veya kullanıcı adında arama yapabilelim
+    search_fields = ('content', 'user__username')
+    # En yeni mesaj en üstte görünsün
+    ordering = ('-timestamp',)
