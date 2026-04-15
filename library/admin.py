@@ -25,11 +25,8 @@ class UserBookAdmin(admin.ModelAdmin):
 
 @admin.register(ChatMessage)
 class ChatMessageAdmin(admin.ModelAdmin):
-    # Mesajı gönderen, mesaj içeriği ve tarih sütunlarda görünsün
-    list_display = ('user', 'content', 'timestamp')
-    # Tarihe ve kullanıcıya göre filtreleme yapabilelim
-    list_filter = ('timestamp', 'user')
-    # Mesaj içeriğinde veya kullanıcı adında arama yapabilelim
+    # 'timestamp' yerine 'created_at' yazdık
+    list_display = ('user', 'content', 'created_at')
+    list_filter = ('created_at', 'user')
     search_fields = ('content', 'user__username')
-    # En yeni mesaj en üstte görünsün
-    ordering = ('-timestamp',)
+    ordering = ('-created_at',)
