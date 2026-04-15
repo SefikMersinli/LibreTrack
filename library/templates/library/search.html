@@ -5,6 +5,33 @@
 
 {% block content %}
 <style>
+    /* Mobil Optimizasyon */
+@media (max-width: 768px) {
+    .hero-container {
+        padding: 50px 10px; /* Mobilde daha dar hero alanı */
+        border-radius: 1.5rem;
+    }
+    .hero-container h1 {
+        font-size: 2rem !important; /* Büyük yazı telefon ekranını kaplamasın */
+    }
+    .stats-bar {
+        margin-top: -30px;
+        padding: 15px;
+    }
+    .stat-item h3 {
+        font-size: 1.2rem;
+    }
+    .stat-item.border-start.border-end {
+        border: none !important; /* Mobilde çizgileri kaldırıp temiz gösterelim */
+    }
+    .ataturk-portre {
+        width: 120px !important;
+        height: 120px !important;
+    }
+    .search-box-premium {
+        border-radius: 25px; /* Mobilde daha oval değil, daha karemsi olsun yer kazanalım */
+    }
+}
     /* 1. HERO & STATS */
     .hero-container {
         position: relative;
@@ -248,3 +275,9 @@
     });
 </script>
 {% endblock %}
+
+{% if book.pdf_url %}
+<a href="{{ book.pdf_url }}" target="_blank" class="btn btn-success btn-sm rounded-pill w-100 mt-2">
+    <i class="bi bi-download me-1"></i> Kitabı İndir (PDF)
+</a>
+{% endif %}

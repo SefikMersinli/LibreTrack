@@ -97,6 +97,20 @@ def book_detail_view(request):
             comment.book_id = book_id
             comment.save()
             messages.success(request, "Yorumun paylaşıldı! 💬")
+          # 4. KİTAP DETAY VE YORUM SİSTEMİ
+def book_detail_view(request):
+    book_id = request.GET.get('id')
+    if not book_id:
+        return redirect('search_books')
+
+    if request.method == 'POST' and request.user.is_authenticated:
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.user = request.user
+            comment.book_id = book_id
+            comment.save()
+            messages.success(request, "Yorumun paylaşıldı! 💬")
             return redirect(f'/book-detail/?id={book_id}')
 
     url = f"https://www.googleapis.com/books/v1/volumes/{book_id}"
@@ -104,7 +118,10 @@ def book_detail_view(request):
     try:
         r = requests.get(url, timeout=10)
         if r.status_code == 200:
-            vol = r.json().get('volumeInfo', {})
+            data = r.json()
+            vol = data.get('volumeInfo', {})
+            access = data.get('accessInfo', {}) # PDF ve indirme bilgileri burada
+            
             book_details = {
                 'id': book_id,
                 'title': vol.get('title'),
@@ -113,7 +130,9 @@ def book_detail_view(request):
                 'description': vol.get('description', 'Açıklama mevcut değil.'),
                 'categories': ", ".join(vol.get('categories', ['Edebiyat'])),
                 'page_count': vol.get('pageCount', '---'),
-                'published_date': vol.get('publishedDate', 'Belirtilmemiş')
+                'published_date': vol.get('publishedDate', 'Belirtilmemiş'),
+                # PDF linkini sözlüğün içine, virgülle ayırarak yerleştirdik:
+                'pdf_url': access.get('pdf', {}).get('downloadLink') or access.get('webReaderLink'),
             }
     except:
         pass
@@ -121,7 +140,6 @@ def book_detail_view(request):
     comments = Comment.objects.filter(book_id=book_id).order_by('-created_at')
     context = {'book': book_details, 'comments': comments, 'comment_form': CommentForm()}
     return render(request, 'library/book_detail.html', context)
-
 # 5. TAKAS DURUMUNU DEĞİŞTİR (AJAX)
 @login_required
 def toggle_exchange(request, pk):
@@ -131,6 +149,7 @@ def toggle_exchange(request, pk):
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({'status': 'success', 'is_exchangeable': user_book.is_exchangeable})
     return redirect('my_library')
+
 
 # --- DİĞER STANDART GÖRÜNÜMLER ---
 @login_required

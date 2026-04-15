@@ -103,6 +103,31 @@
                         </div>
 
                         <h5 class="fw-bold text-theme-main mb-3">Kitap Özeti</h5>
+                        {% if book.pdf_url %}
+<div class="mt-4 p-3 rounded-4 border border-success bg-success bg-opacity-10">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                <i class="bi bi-file-earmark-pdf-fill fs-4"></i>
+            </div>
+            <div>
+                <h6 class="fw-bold text-theme-main mb-0">Dijital Kopya Mevcut</h6>
+                <small class="text-success fw-bold">PDF Formatında</small>
+            </div>
+        </div>
+        <a href="{{ book.pdf_url }}" target="_blank" class="btn btn-success px-4 rounded-pill fw-bold shadow-sm">
+            <i class="bi bi-download me-2"></i>Hemen İndir / Oku
+        </a>
+    </div>
+</div>
+{% else %}
+<div class="mt-4 p-3 rounded-4 border border-secondary bg-light opacity-75">
+    <div class="d-flex align-items-center gap-3">
+        <i class="bi bi-info-circle-fill text-muted fs-4"></i>
+        <p class="mb-0 text-theme-muted small">Bu kitabın dijital indirme linki yayıncı tarafından kısıtlanmış olabilir.</p>
+    </div>
+</div>
+{% endif %}
                         <p class="text-theme-muted" style="line-height: 1.8;">
                             {{ book.description|truncatechars:400 }}
                         </p>
