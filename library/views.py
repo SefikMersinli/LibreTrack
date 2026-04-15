@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
-from .models import Book, UserBook, Profile, Comment, NewsletterUser
+from .models import Book, UserBook, Profile, Comment, NewsletterUser, ChatMessage # ChatMessage BURAYA EKLENDİ
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
@@ -32,21 +32,18 @@ def get_books_from_api(query):
         return []
     return []
 
-# 2. ANA KEŞFET SAYFASI (Arama, Takas Sistemi, Newsletter ve Yorumlar)
+# 2. ANA KEŞFET SAYFASI
 def search_view(request):
     query = request.GET.get('q')
     konular = ['dünya klasikleri', 'psikoloji', 'yazılım', 'bilim kurgu', 'felsefe']
     
-    # Kitapları getir
     search_query = query if query else random.choice(konular)
     all_books = get_books_from_api(search_query)
     
-    # Sayfalama
     paginator = Paginator(all_books, 8)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # İstatistikler ve Yorumlar
     real_comments = Comment.objects.all().order_by('-created_at')[:3]
     stats = {
         'toplam': Book.objects.count(),
@@ -54,18 +51,11 @@ def search_view(request):
         'yorum_sayisi': Comment.objects.count()
     }
 
-    # TAKAS SİSTEMİ: Giriş yapmayan kullanıcılar için hata koruması
-    if request.user.is_authenticated:
-        exchange_books = UserBook.objects.filter(is_exchangeable=True).exclude(user=request.user).select_related('book', 'user')[:8]
-    else:
-        exchange_books = UserBook.objects.filter(is_exchangeable=True).select_related('book', 'user')[:8]
-
     context = {
         'books': page_obj,
         'query': query if query else '',
         'real_comments': real_comments,
         'stats': stats,
-        'exchange_books': exchange_books,
         'total_saved_books': stats['toplam'],
         'total_users': User.objects.count()
     }
@@ -97,20 +87,6 @@ def book_detail_view(request):
             comment.book_id = book_id
             comment.save()
             messages.success(request, "Yorumun paylaşıldı! 💬")
-          # 4. KİTAP DETAY VE YORUM SİSTEMİ
-def book_detail_view(request):
-    book_id = request.GET.get('id')
-    if not book_id:
-        return redirect('search_books')
-
-    if request.method == 'POST' and request.user.is_authenticated:
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.user = request.user
-            comment.book_id = book_id
-            comment.save()
-            messages.success(request, "Yorumun paylaşıldı! 💬")
             return redirect(f'/book-detail/?id={book_id}')
 
     url = f"https://www.googleapis.com/books/v1/volumes/{book_id}"
@@ -120,7 +96,7 @@ def book_detail_view(request):
         if r.status_code == 200:
             data = r.json()
             vol = data.get('volumeInfo', {})
-            access = data.get('accessInfo', {}) # PDF ve indirme bilgileri burada
+            access = data.get('accessInfo', {})
             
             book_details = {
                 'id': book_id,
@@ -131,7 +107,6 @@ def book_detail_view(request):
                 'categories': ", ".join(vol.get('categories', ['Edebiyat'])),
                 'page_count': vol.get('pageCount', '---'),
                 'published_date': vol.get('publishedDate', 'Belirtilmemiş'),
-                # PDF linkini sözlüğün içine, virgülle ayırarak yerleştirdik:
                 'pdf_url': access.get('pdf', {}).get('downloadLink') or access.get('webReaderLink'),
             }
     except:
@@ -140,18 +115,21 @@ def book_detail_view(request):
     comments = Comment.objects.filter(book_id=book_id).order_by('-created_at')
     context = {'book': book_details, 'comments': comments, 'comment_form': CommentForm()}
     return render(request, 'library/book_detail.html', context)
-# 5. TAKAS DURUMUNU DEĞİŞTİR (AJAX)
+
+# 5. TOPLULUK SOHBETİ
 @login_required
-def toggle_exchange(request, pk):
-    user_book = get_object_or_404(UserBook, pk=pk, user=request.user)
-    user_book.is_exchangeable = not user_book.is_exchangeable
-    user_book.save()
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({'status': 'success', 'is_exchangeable': user_book.is_exchangeable})
-    return redirect('my_library')
+def chat_view(request):
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        if content:
+            ChatMessage.objects.create(user=request.user, content=content)
+            return redirect('chat')
 
+    # Mesajları tarihe göre (eskiden yeniye) çekiyoruz
+    chat_messages = ChatMessage.objects.all().order_by('created_at')
+    return render(request, 'library/chat.html', {'chat_messages': chat_messages})
 
-# --- DİĞER STANDART GÖRÜNÜMLER ---
+# 6. KİTAPLIĞA EKLEME
 @login_required
 def add_to_list(request):
     if request.method == "POST":
@@ -166,6 +144,7 @@ def add_to_list(request):
         return redirect('my_library')
     return redirect('search_books')
 
+# 7. KİTAPLIĞIM GÖRÜNÜMÜ
 @login_required
 def my_library_view(request):
     user_books = UserBook.objects.filter(user=request.user).select_related('book').order_by('-updated_at')
@@ -177,6 +156,7 @@ def my_library_view(request):
     }
     return render(request, 'library/my_library.html', {'user_books': user_books, 'stats': stats})
 
+# 8. KİTAP SİLME VE PUANLAMA
 @login_required
 def delete_book(request, pk):
     ub = get_object_or_404(UserBook, pk=pk, user=request.user)
@@ -194,6 +174,7 @@ def update_rating(request):
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error'}, status=400)
 
+# 9. KULLANICI İŞLEMLERİ (Kayıt, Profil, Şifre)
 def register_view(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)

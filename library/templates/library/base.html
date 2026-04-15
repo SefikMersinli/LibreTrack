@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="tr" data-theme="light">
 <head>
@@ -130,6 +131,11 @@
                         <i id="theme-icon" class="bi bi-moon-stars-fill fs-4" style="color: var(--primary);"></i>
                     </button>
                     <a class="nav-link px-3 fw-bold" href="{% url 'search_books' %}">Keşfet</a>
+                    
+                    <a class="nav-link px-3 fw-bold text-warning" href="{% url 'chat' %}">
+                        <i class="bi bi-chat-dots-fill me-1"></i>Sohbet
+                    </a>
+
                     {% if user.is_authenticated %}
                         <a class="nav-link px-3 fw-bold" href="{% url 'my_library' %}">Kitaplığım</a>
                         <div class="dropdown">
@@ -215,12 +221,16 @@
         const icon = document.getElementById('theme-icon');
         const html = document.documentElement;
         const currentTheme = localStorage.getItem('theme') || 'light';
+        
         html.setAttribute('data-theme', currentTheme);
+        
         const updateIcon = (t) => {
             icon.className = t === 'dark' ? 'bi bi-sun-fill fs-4' : 'bi bi-moon-stars-fill fs-4';
             icon.style.color = t === 'dark' ? '#fbbf24' : '#4f46e5';
         };
+        
         updateIcon(currentTheme);
+        
         btn.onclick = () => {
             const newT = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
             html.setAttribute('data-theme', newT);

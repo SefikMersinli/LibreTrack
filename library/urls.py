@@ -1,7 +1,5 @@
 from django.urls import path
-from . import views
 from django.contrib.auth import views as auth_views
-from django.urls import path
 from . import views
 
 urlpatterns = [
@@ -16,7 +14,6 @@ urlpatterns = [
     # Kullanıcı Kayıt ve Giriş/Çıkış
     path('register/', views.register_view, name='register'),
     path('login/', auth_views.LoginView.as_view(template_name='library/login.html'), name='login'),
-    # Logout sonrası ana sayfaya veya girişe yönlendirme için
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
     
     # Profil ve Güvenlik
@@ -37,8 +34,7 @@ urlpatterns = [
          auth_views.PasswordResetCompleteView.as_view(template_name='library/password_reset_complete.html'),
          name='password_reset_complete'),
 
-     path('newsletter-kayit/', views.newsletter_signup, name='newsletter_signup'),
-
-
-     path('toggle-exchange/<int:pk>/', views.toggle_exchange, name='toggle_exchange'),
+    # Newsletter ve Topluluk
+    path('newsletter-kayit/', views.newsletter_signup, name='newsletter_signup'),
+    path('chat/', views.chat_view, name='chat'), # Sohbet burada
 ]
