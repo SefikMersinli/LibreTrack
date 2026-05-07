@@ -19,11 +19,11 @@
         color: var(--foreground) !important;
     }
 
-    /* FORM INPUT MODERNİZASYONU (Görünmezlik Hatasının Çözüldüğü Yer) */
+    /* FORM INPUT MODERNİZASYONU */
     .modern-form input {
         background-color: var(--background) !important;
         border: 1.5px solid var(--border) !important;
-        color: var(--foreground) !important; /* Hem aydınlık hem koyu modda okunur */
+        color: var(--foreground) !important; 
         border-radius: 0.85rem !important;
         padding: 0.8rem 1.2rem !important;
         font-weight: 500 !important;
@@ -41,7 +41,6 @@
         opacity: 0.6;
     }
 
-    /* Input üstü etiketler (Kullanıcı adı, Parola vs.) */
     .modern-form label {
         color: var(--foreground) !important;
         font-weight: 700;
@@ -50,7 +49,6 @@
         display: block;
     }
 
-    /* Parola kural açıklamaları (Örn: Parola çok kısa) */
     .help-text {
         display: block;
         font-size: 0.75rem;
@@ -59,7 +57,6 @@
         padding-left: 0.2rem;
     }
 
-    /* Hata mesajları (Kırmızı renkli uyarılar) */
     .errorlist {
         list-style: none;
         padding: 0;
@@ -103,7 +100,7 @@
                 {% csrf_token %}
                 
                 {% for field in form %}
-                    <div class="mb-4">
+                    <div class="mb-4" {% if field.name == 'username' %}style="display: none;"{% endif %}>
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                         
                         {{ field }}
@@ -138,4 +135,48 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Arka Planda Kullanıcı Adı Üreten Sihirli Kod
+    document.addEventListener('DOMContentLoaded', function() {
+        const usernameInput = document.getElementById('id_username');
+        const firstNameInput = document.getElementById('id_first_name'); // Eğer ad alanı varsa
+        const emailInput = document.getElementById('id_email'); // Eğer e-posta alanı varsa
+
+        function generateUsername() {
+            if (!usernameInput) return; // Eğer username kutusu yoksa işlem yapma
+            
+            let baseName = "okur"; // Varsayılan isim
+            
+            // Öncelik Ad alanında, yoksa e-posta üzerinden üret
+            if (firstNameInput && firstNameInput.value) {
+                baseName = firstNameInput.value;
+            } else if (emailInput && emailInput.value) {
+                baseName = emailInput.value.split('@')[0];
+            }
+            
+            // Türkçe karakterleri temizle, küçük harfe çevir ve boşlukları at
+            const trMap = {'ç':'c', 'ğ':'g', 'ı':'i', 'i':'i', 'ö':'o', 'ş':'s', 'ü':'u', ' ':'_'};
+            baseName = baseName.toLowerCase().replace(/[çğıiöşü ]/g, m => trMap[m] || m).replace(/[^a-z0-9_]/g, '');
+            
+            // Kullanıcı her harf yazdığında numara değişmesin diye numarayı bir kere üret ve hafızada tut
+            if (!usernameInput.dataset.randomAdded) {
+                usernameInput.dataset.randomNum = Math.floor(1000 + Math.random() * 9000);
+                usernameInput.dataset.randomAdded = "true";
+            }
+            
+            // Gizli kutuya değeri anında yaz
+            usernameInput.value = baseName + usernameInput.dataset.randomNum;
+        }
+
+        // Kullanıcı Ad veya E-posta kutusuna yazı yazdıkça bu fonksiyonu çalıştır
+        if (firstNameInput) firstNameInput.addEventListener('input', generateUsername);
+        if (emailInput) emailInput.addEventListener('input', generateUsername);
+        
+        // Sayfa ilk yüklendiğinde kutu boşsa garanti olsun diye bir kez çalıştır
+        if (usernameInput && !usernameInput.value) {
+            generateUsername();
+        }
+    });
+</script>
 {% endblock %}
