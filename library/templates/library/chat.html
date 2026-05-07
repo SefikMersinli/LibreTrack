@@ -1,0 +1,102 @@
+{% extends 'library/base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-lg border-0 rounded-4 overflow-hidden" style="height: 80vh;">
+        <div class="bg-primary p-3 text-white">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-chat-dots-fill me-2"></i>LibreTrack Topluluk Sohbeti</h5>
+        </div>
+        
+        <div id="chat-window" class="p-4 overflow-auto bg-light" style="flex: 1;">
+        </div>
+
+        <div class="p-3 border-top bg-white">
+            <form id="chat-form" class="d-flex gap-2">
+                {% csrf_token %}
+                <input type="text" id="chat-input" name="content" class="form-control rounded-pill border-0 bg-light px-4" placeholder="Mesajını yaz..." required>
+                <button type="submit" class="btn btn-primary rounded-circle"><i class="bi bi-send-fill"></i></button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const chatWindow = document.getElementById("chat-window");
+    const chatForm = document.getElementById("chat-form");
+    const chatInput = document.getElementById("chat-input");
+    let lastContent = ""; // Ekranın titremesini önlemek için hafıza
+
+    function scrollToBottom() {
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    // 1. MESAJLARI ARKA PLANDAN ÇEKME
+    function fetchMessages() {
+        fetch("{% url 'get_chat_messages' %}")
+            .then(response => response.json())
+            .then(data => {
+                let htmlContent = "";
+                
+                data.messages.forEach(msg => {
+                    let alignment = msg.is_me ? "text-end" : "";
+                    let bgClass = msg.is_me ? "bg-primary text-white" : "bg-white text-dark";
+
+                    htmlContent += `
+                        <div class="mb-3 ${alignment}">
+                            <div class="d-inline-block p-3 rounded-4 shadow-sm ${bgClass}" style="max-width: 75%; text-align: left;">
+                                <small class="d-block fw-bold mb-1">@${msg.user}</small>
+                                ${msg.content}
+                                <small class="d-block mt-1 opacity-50" style="font-size: 0.7rem;">${msg.time}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Sadece yeni mesaj varsa ekranı güncelle ve aşağı kaydır
+                if (lastContent !== htmlContent) {
+                    chatWindow.innerHTML = htmlContent;
+                    lastContent = htmlContent;
+                    scrollToBottom();
+                }
+            })
+            .catch(error => console.error("Mesajlar çekilemedi:", error));
+    }
+
+    // Sayfa açıldığında mesajları çek ve her 2 saniyede bir kontrol et
+    fetchMessages();
+    setInterval(fetchMessages, 2000);
+
+    // 2. SAYFAYI YENİLEMEDEN MESAJ GÖNDERME
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault(); // İŞTE SAYFAYI YENİLEMESİNİ ENGELLEYEN SİHİRLİ KOD BURASI
+
+        const content = chatInput.value;
+        if (content.trim() === "") return;
+
+        // Django'nun güvenlik tokenini al
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // Veriyi form formatında hazırla
+        const formData = new URLSearchParams();
+        formData.append('content', content);
+        formData.append('csrfmiddlewaretoken', csrfToken);
+
+        // Mesajı arka planda (Fetch API ile) gönder
+        fetch("{% url 'chat' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-Requested-With": "XMLHttpRequest" // Django'ya arka plan işlemi olduğunu söyler
+            },
+            body: formData.toString()
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                chatInput.value = ""; // Başarılıysa kutuyu temizle
+                fetchMessages(); // Gönderdiğin mesajı anında ekrana yansıt
+            }
+        })
+        .catch(error => console.error("Mesaj gönderilemedi:", error));
+    });
+</script>
+{% endblock %}

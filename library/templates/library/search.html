@@ -1,0 +1,299 @@
+{% extends 'library/base.html' %}
+{% load static %}
+
+{% block title %}Keşfet - LibreTrack Digital Library{% endblock %}
+
+{% block content %}
+
+<style>
+    .commentSwiper {
+        display: block !important;
+        width: 100% !important;
+        min-height: 200px;
+    }
+    /* Mobil Optimizasyon */
+    @media (max-width: 768px) {
+        .hero-container { padding: 50px 10px; border-radius: 1.5rem; }
+        .hero-container h1 { font-size: 2rem !important; }
+        .stats-bar { margin-top: -30px; padding: 15px; }
+        .stat-item h3 { font-size: 1.2rem; }
+        .stat-item.border-start.border-end { border: none !important; }
+        .ataturk-portre { width: 120px !important; height: 120px !important; }
+        .search-box-premium { border-radius: 25px; }
+    }
+
+    /* 1. HERO & STATS */
+    .hero-container {
+        position: relative;
+        background: linear-gradient(rgba(10, 12, 16, 0.75), rgba(10, 12, 16, 0.95)), 
+                    url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=1200');
+        background-size: cover; background-position: center;
+        border-radius: 2.5rem; padding: 100px 20px; text-align: center;
+        border: 1px solid var(--border); margin-bottom: 60px;
+    }
+    .stats-bar {
+        background: var(--card); border: 1px solid var(--border);
+        border-radius: 1.5rem; padding: 25px;
+        margin-top: -60px; position: relative; z-index: 10;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .stat-item h3 { color: var(--primary) !important; font-weight: 900; font-family: 'Playfair Display', serif; }
+
+    /* 2. SEARCH BOX */
+    .search-box-premium {
+        background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 100px; padding: 8px; max-width: 650px; margin: 0 auto;
+    }
+    .search-input-premium { background: transparent !important; border: none !important; color: white !important; font-size: 1.1rem; }
+
+    /* 3. ATATÜRK ÖZEL BÖLÜMÜ */
+    .ataturk-premium-card {
+        background-color: var(--ataturk-card-bg, var(--card)) !important;
+        border-radius: 2.5rem; padding: 40px 30px; margin: 60px 0;
+        border: 1px solid rgba(79, 70, 229, 0.2); position: relative; overflow: hidden;
+    }
+    .ataturk-premium-card h2, .ataturk-premium-card p { color: var(--ataturk-card-text, var(--foreground)) !important; }
+    .ataturk-badge {
+        background-color: var(--ataturk-badge-bg, var(--primary)) !important;
+        color: var(--ataturk-badge-text, #fff) !important;
+        padding: 8px 20px; border-radius: 100px; font-weight: 700; display: inline-block;
+    }
+    .ataturk-portre {
+        width: 180px !important; height: 180px !important; object-fit: cover !important;
+        border-radius: 50% !important; border: 5px solid #fbbf24 !important;
+        box-shadow: 0 0 30px rgba(251, 191, 36, 0.3);
+    }
+
+    /* 4. FEATURES & TESTIMONIALS */
+    .feature-card, .testimonial-card { padding: 30px; border-radius: 2rem; background: var(--card); border: 1px solid var(--border); transition: 0.3s; height: 100%; }
+    .feature-card:hover, .testimonial-card:hover { transform: translateY(-10px); border-color: var(--primary); }
+    .feature-icon { width: 50px; height: 50px; background: rgba(79, 70, 229, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: var(--primary); margin-bottom: 20px; }
+    .user-avatar { width: 45px; height: 45px; border-radius: 50%; margin-right: 12px; object-fit: cover; }
+
+    /* 5. NEWSLETTER & BOOK CARDS */
+    .newsletter-box { background: var(--primary); border-radius: 2rem; padding: 60px; color: white; text-align: center; margin: 80px 0; }
+    .book-card-premium { background: var(--card); border: 1px solid var(--border); border-radius: 1.5rem; transition: 0.4s; overflow: hidden; height: 100%; }
+    .book-img-wrapper { position: relative; overflow: hidden; border-radius: 1.2rem; aspect-ratio: 3/4; margin-bottom: 15px; }
+    
+    /* Swiper Özel Ayarı */
+    .commentSwiper { width: 100%; padding: 20px 0 60px 0 !important; }
+</style>
+
+<div class="container-fluid px-0">
+    <div class="hero-container fade-in">
+        <div class="container">
+            <h1 class="display-3 fw-bold text-white mb-4 font-serif">Your gateway to<br>endless knowledge</h1>
+            <div class="search-box-premium d-flex align-items-center shadow-lg">
+                <i class="bi bi-search ms-4 text-warning fs-5"></i>
+                <form method="GET" action="{% url 'search_books' %}" id="searchForm" class="d-flex w-100 align-items-center">
+                    <input type="text" id="searchInput" name="q" class="form-control search-input-premium ps-3 shadow-none" placeholder="Kitap veya yazar ara..." value="{{ request.GET.q }}">
+                    <button type="button" class="btn text-white-50 me-2" onclick="startSpeech()"><i class="bi bi-mic-fill fs-5"></i></button>
+                    <button class="btn btn-primary px-5 rounded-pill fw-bold" type="submit">Ara</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats-bar mb-5 shadow-sm">
+            <div class="row text-center g-4">
+                <div class="col-md-4 stat-item"><h3>{{ stats.toplam|default:"15k+" }}</h3><p class="text-muted m-0 small fw-bold">KAYITLI KİTAP</p></div>
+                <div class="col-md-4 stat-item border-start border-end"><h3>{{ stats.okuyan|default:"1.2k+" }}</h3><p class="text-muted m-0 small fw-bold">OKUYAN</p></div>
+                <div class="col-md-4 stat-item"><h3>{{ real_comments.count|default:"9.8k" }}</h3><p class="text-muted m-0 small fw-bold">GERÇEK YORUM</p></div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5 pt-5">
+            <div class="col-md-4"><div class="feature-card shadow-sm"><div class="feature-icon"><i class="bi bi-collection"></i></div><h5 class="fw-bold">Vast Collection</h5><p class="text-muted small">Binlerce esere saniyeler içinde ulaşın.</p></div></div>
+            <div class="col-md-4"><div class="feature-card shadow-sm"><div class="feature-icon"><i class="bi bi-chat-dots"></i></div><h5 class="fw-bold">Share Reviews</h5><p class="text-muted small">Düşüncelerini paylaş, topluluğa katkı sağla.</p></div></div>
+            <div class="col-md-4"><div class="feature-card shadow-sm"><div class="feature-icon"><i class="bi bi-shield-check"></i></div><h5 class="fw-bold">Personal Favorites</h5><p class="text-muted small">Kendi özel listelerini kolayca yönet.</p></div></div>
+        </div>
+
+        <div class="ataturk-premium-card shadow-lg">
+            <div class="row align-items-center">
+                <div class="col-lg-4 text-center mb-4 mb-lg-0">
+                    <img src="{% static 'images/atam.jpg' %}" alt="Mustafa Kemal Atatürk" class="ataturk-portre shadow-lg">
+                </div>
+                <div class="col-lg-8 text-lg-start text-center"> 
+                    <h2 class="display-5 font-serif fw-bold mb-3">"Hayatta en hakiki mürşit ilimdir."</h2>
+                    <p class="fs-5 mb-4" style="opacity: 0.8;">Gazi Mustafa Kemal Atatürk'ün kitap sevgisi ve bilime verdiği değer, projemizin en büyük ilham kaynağıdır.</p>
+                    <span class="ataturk-badge">Atatürk'ün İzinde</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center my-5">
+            <h2 class="display-6 fw-bold font-serif">Okurlarımız Ne Diyor?</h2>
+        </div>
+
+        <div class="swiper commentSwiper mb-5">
+            <div class="swiper-wrapper">
+                {% for comment in real_comments %}
+                <div class="swiper-slide">
+                    <div class="testimonial-card shadow-sm mx-2">
+                        <div class="d-flex mb-3">
+                            <img src="{{ comment.user.profile.image.url }}" class="user-avatar" 
+                                 onerror="this.src='https://ui-avatars.com/api/?name={{ comment.user.username }}&background=4f46e5&color=fff'">
+                            <div>
+                                <h6 class="mb-0 fw-bold">@{{ comment.user.username }}</h6>
+                                <small class="text-muted">{{ comment.created_at|timesince }} önce</small>
+                            </div>
+                        </div>
+                        <p class="text-muted small italic">"{{ comment.content|truncatechars:100 }}"</p>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="swiper-slide text-center py-5">
+                    <p class="text-muted">Henüz yorum yapılmamış.</p>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="swiper-pagination"></div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-end mb-4 pt-4 border-top">
+            <h3 class="fw-bold font-serif mb-0">Popüler Keşifler</h3>
+            <span class="badge bg-primary rounded-pill px-3 shadow-sm">{{ books|length }} Kitap</span>
+        </div>
+        
+        <div id="book-results" class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4 mb-5">
+            {% for book in books %}
+            <div class="col">
+                <div class="card book-card-premium p-3 shadow-sm">
+                    <div class="book-img-wrapper shadow"><img src="{{ book.image_url|default:'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400' }}" class="w-100 h-100 object-fit-cover"></div>
+                    <div class="card-body p-0 d-flex flex-column">
+                        <h6 class="fw-bold text-truncate mb-1">{{ book.title }}</h6>
+                        <p class="text-muted small mb-4">{{ book.author|truncatechars:20 }}</p>
+                        <div class="mt-auto d-grid gap-2">
+                            <a href="{% url 'book_detail' %}?id={{ book.id }}" class="btn btn-outline-primary btn-sm rounded-pill">Detaylar</a>
+                            {% if user.is_authenticated %}
+                            <form method="POST" action="{% url 'add_to_list' %}" class="add-book-form d-grid">
+                                {% csrf_token %}
+                                <input type="hidden" name="title" value="{{ book.title }}">
+                                <input type="hidden" name="author" value="{{ book.author }}">
+                                <input type="hidden" name="image_url" value="{{ book.image_url }}">
+                                <select name="status" class="form-select form-select-sm mb-2 rounded-3 small">
+                                    <option value="plan">📅 Okuyacağım</option>
+                                    <option value="reading">📖 Okuyorum</option>
+                                    <option value="finished">✅ Bitirdim</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary btn-sm rounded-pill">Ekle</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if books.has_other_pages %}
+        <nav aria-label="Kitap Sayfaları" class="mt-4 mb-5">
+            <ul class="pagination justify-content-center">
+                
+                {% if books.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?q={{ query }}&page={{ books.previous_page_number }}">Önceki</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Önceki</span></li>
+                {% endif %}
+
+                {% for num in books.paginator.page_range %}
+                    {% if books.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > books.number|add:'-4' and num < books.number|add:'4' %}
+                        <li class="page-item"><a class="page-link" href="?q={{ query }}&page={{ num }}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if books.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?q={{ query }}&page={{ books.next_page_number }}">Sonraki</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Sonraki</span></li>
+                {% endif %}
+
+            </ul>
+        </nav>
+        {% endif %}
+        <div class="newsletter-box shadow-lg">
+            <h2 class="fw-bold mb-3">Join our newsletter</h2>
+            <p class="mb-4 opacity-75">Yeni kitaplardan ilk siz haberdar olun.</p>
+            <div class="row justify-content-center">
+                <div class="col-md-7">
+                    <form action="{% url 'newsletter_signup' %}" method="POST">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <input type="email" name="email" class="form-control px-4 border-0 shadow-none" placeholder="E-posta adresiniz..." required style="height: 55px; border-radius: 100px 0 0 100px;">
+                            <button type="submit" class="btn btn-dark px-4 fw-bold" style="border-radius: 0 100px 100px 0;">Kaydet</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    window.onload = function() {
+        // SWIPER'I SÜREKLİ AKIŞ (MARQUEE) MODUNA SOKUYORUZ
+        const swiper = new Swiper(".commentSwiper", {
+            slidesPerView: 1,
+            spaceBetween: 30,
+            loop: true,
+            speed: 6000, 
+            allowTouchMove: false, 
+            
+            autoplay: {
+                delay: 0, 
+                disableOnInteraction: false,
+            },
+            
+            freeMode: {
+                enabled: true,
+                momentum: false,
+            },
+
+            breakpoints: {
+                768: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 },
+            },
+        });
+
+        document.querySelector('.swiper-wrapper').style.transitionTimingFunction = 'linear';
+    };
+});
+
+// SESLİ ARAMA (Dokunma)
+function startSpeech() {
+    const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    rec.lang = 'tr-TR';
+    rec.onresult = (e) => { 
+        document.getElementById('searchInput').value = e.results[0][0].transcript; 
+        document.getElementById('searchForm').submit(); 
+    };
+    rec.start();
+}
+
+// KİTAP EKLEME (AJAX)
+$(document).on('submit', '.add-book-form', function(e) {
+    e.preventDefault();
+    const form = $(this);
+    const card = form.closest('.col');
+    $.ajax({
+        type: "POST", 
+        url: form.attr('action'), 
+        data: form.serialize(),
+        success: function() {
+            card.animate({ opacity: 0, transform: 'scale(0.8)' }, 400, function() { 
+                $(this).remove(); 
+            });
+        }
+    });
+});
+</script>
+{% endblock %}
