@@ -83,7 +83,7 @@
 <div class="container-fluid px-0">
     <div class="hero-container fade-in">
         <div class="container">
-            <h1 class="display-3 fw-bold text-white mb-4 font-serif">Your gateway to<br>endless knowledge</h1>
+            <h1 class="display-3 fw-bold text-white mb-4 font-serif">Sonsuz bilgiye<br>açılan kapınız</h1>
             <div class="search-box-premium d-flex align-items-center shadow-lg">
                 <i class="bi bi-search ms-4 text-warning fs-5"></i>
                 <form method="GET" action="{% url 'search_books' %}" id="searchForm" class="d-flex w-100 align-items-center">
@@ -97,17 +97,29 @@
 
     <div class="container">
         <div class="stats-bar mb-5 shadow-sm">
+            
             <div class="row text-center g-4">
-                <div class="col-md-4 stat-item"><h3>{{ stats.toplam|default:"15k+" }}</h3><p class="text-muted m-0 small fw-bold">KAYITLI KİTAP</p></div>
-                <div class="col-md-4 stat-item border-start border-end"><h3>{{ stats.okuyan|default:"1.2k+" }}</h3><p class="text-muted m-0 small fw-bold">OKUYAN</p></div>
-                <div class="col-md-4 stat-item"><h3>{{ real_comments.count|default:"9.8k" }}</h3><p class="text-muted m-0 small fw-bold">GERÇEK YORUM</p></div>
-            </div>
+    <div class="col-md-4 stat-item">
+        <h3>{{ stats.toplam|default:"0" }}</h3>
+        <p class="text-muted m-0 small fw-bold">KAYITLI KİTAP</p>
+    </div>
+    <div class="col-md-4 stat-item border-start border-end">
+        <h3>{{ stats.okuyan|default:"0" }}</h3>
+        <p class="text-muted m-0 small fw-bold">OKUYAN</p>
+    </div>
+    <div class="col-md-4 stat-item">
+        <h3>{{ stats.yorum_sayisi|default:"0" }}</h3>
+        <p class="text-muted m-0 small fw-bold">GERÇEK YORUM</p>
+    </div>
+</div>
         </div>
 
         <div class="row g-4 mb-5 pt-5">
-            <div class="col-md-4"><div class="feature-card shadow-sm"><div class="feature-icon"><i class="bi bi-collection"></i></div><h5 class="fw-bold">Vast Collection</h5><p class="text-muted small">Binlerce esere saniyeler içinde ulaşın.</p></div></div>
-            <div class="col-md-4"><div class="feature-card shadow-sm"><div class="feature-icon"><i class="bi bi-chat-dots"></i></div><h5 class="fw-bold">Share Reviews</h5><p class="text-muted small">Düşüncelerini paylaş, topluluğa katkı sağla.</p></div></div>
-            <div class="col-md-4"><div class="feature-card shadow-sm"><div class="feature-icon"><i class="bi bi-shield-check"></i></div><h5 class="fw-bold">Personal Favorites</h5><p class="text-muted small">Kendi özel listelerini kolayca yönet.</p></div></div>
+            <div class="row g-4 mb-5 pt-5">
+    <div class="col-md-4"><div class="feature-card shadow-sm"><div class="feature-icon"><i class="bi bi-collection"></i></div><h5 class="fw-bold">Geniş Koleksiyon</h5><p class="text-muted small">Binlerce esere saniyeler içinde ulaşın.</p></div></div>
+    <div class="col-md-4"><div class="feature-card shadow-sm"><div class="feature-icon"><i class="bi bi-chat-dots"></i></div><h5 class="fw-bold">Yorumları Paylaş</h5><p class="text-muted small">Düşüncelerini paylaş, topluluğa katkı sağla.</p></div></div>
+    <div class="col-md-4"><div class="feature-card shadow-sm"><div class="feature-icon"><i class="bi bi-shield-check"></i></div><h5 class="fw-bold">Kişisel Favoriler</h5><p class="text-muted small">Kendi özel listelerini kolayca yönet.</p></div></div>
+</div>
         </div>
 
         <div class="ataturk-premium-card shadow-lg">
@@ -220,7 +232,7 @@
         </nav>
         {% endif %}
         <div class="newsletter-box shadow-lg">
-            <h2 class="fw-bold mb-3">Join our newsletter</h2>
+            <h2 class="fw-bold mb-3">E-Bültenimize Abone Olun</h2>
             <p class="mb-4 opacity-75">Yeni kitaplardan ilk siz haberdar olun.</p>
             <div class="row justify-content-center">
                 <div class="col-md-7">
