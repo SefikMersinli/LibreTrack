@@ -86,8 +86,8 @@
             <h1 class="display-3 fw-bold text-white mb-4 font-serif">Sonsuz bilgiye<br>açılan kapınız</h1>
             <div class="search-box-premium d-flex align-items-center shadow-lg">
                 <i class="bi bi-search ms-4 text-warning fs-5"></i>
-                <form method="GET" action="{% url 'search_books' %}" id="searchForm" class="d-flex w-100 align-items-center">
-                    <input type="text" id="searchInput" name="q" class="form-control search-input-premium ps-3 shadow-none" placeholder="Kitap veya yazar ara..." value="{{ request.GET.q }}">
+                <form method="GET" action="" id="searchForm" class="d-flex w-100 align-items-center">
+                    <input type="text" id="searchInput" name="q" class="form-control search-input-premium ps-3 shadow-none" placeholder="Kitap veya yazar ara..." value="{{ query }}">
                     <button type="button" class="btn text-white-50 me-2" onclick="startSpeech()"><i class="bi bi-mic-fill fs-5"></i></button>
                     <button class="btn btn-primary px-5 rounded-pill fw-bold" type="submit">Ara</button>
                 </form>

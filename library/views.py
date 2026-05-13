@@ -1,69 +1,56 @@
+import os
+import random
+import requests
+from pathlib import Path
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
-from .models import Book, UserBook, Profile, Comment, NewsletterUser, ChatMessage
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from django.contrib import messages
 from django.contrib.auth import login, update_session_auth_hash
-from .forms import UserUpdateForm, ProfileUpdateForm, CommentForm, UserRegisterForm
 from django.core.paginator import Paginator
-import random
-import requests
+
+from .models import Book, UserBook, Profile, Comment, NewsletterUser, ChatMessage
+from .forms import UserUpdateForm, ProfileUpdateForm, CommentForm, UserRegisterForm
 
 # ==============================================================================
 # 1. YARDIMCI FONKSİYONLAR (API VE ANALİZ)
 # ==============================================================================
 
-def get_books_from_api(query, max_books=240): 
-    """Google Books API'den döngü ile çok sayıda kitap çeker."""
+def get_books_from_api(query, max_books=40): 
+    """Google Books API'den kitap çeker."""
     books_list = []
+    # API sorgusunu temizle
+    safe_query = query.replace(" ", "+") if query else "roman"
     
     try:
-        # Google tek seferde maks 40 kitap verir. Biz de 40'ar 40'ar çekmek için döngü kuruyoruz.
-        for start_index in range(0, max_books, 40):
-            # API'ye 'startIndex' parametresini ekleyerek nereden başlayacağını söylüyoruz
-            url = f"https://www.googleapis.com/books/v1/volumes?q={query}&maxResults=40&startIndex={start_index}"
-            
-            # Okul internetini çok kitlememek için timeout süresini 3 saniyeye çektim
-            r = requests.get(url, timeout=3)
-            
-            if r.status_code == 200:
-                data = r.json()
-                items = data.get('items', [])
-                
-                # Eğer o kelimeyle ilgili kitap bittiyse (örneğin 150. kitapta bittiyse) döngüyü kır
-                if not items:
-                    break
-                    
-                for item in items:
-                    vol = item.get('volumeInfo', {})
-                    books_list.append({
-                        'id': item.get('id'),
-                        'title': vol.get('title'),
-                        'author': ", ".join(vol.get('authors', ['Bilinmeyen Yazar'])),
-                        'image_url': vol.get('imageLinks', {}).get('thumbnail', '').replace("http:", "https:"),
-                    })
-            else:
-                break # API'den anlık red yersek döngüyü durdur
-                
-        # Listede kaç kitap biriktiyse onu döndür (Maksimum bizim belirlediğimiz sayı kadar)
-        return books_list[:max_books]
+        # PythonAnywhere ücretsiz hesaplarda bazen çoklu istek (döngü) hata verir.
+        # Bu yüzden tek seferde 40 kitap çekmek daha güvenli.
+        url = f"https://www.googleapis.com/books/v1/volumes?q={safe_query}&maxResults=40"
+        r = requests.get(url, timeout=5)
         
-    except:
-        # OKUL İNTERNETİ ERİŞİMİ ENGELLEDİĞİNDE VEYA ÇOK YAVAŞLADIĞINDA BURASI ÇALIŞIR
-        print("DIŞ BAĞLANTI HATASI! Gümüşhane Üniversitesi Çevrimdışı Mod Aktif.")
+        if r.status_code == 200:
+            data = r.json()
+            items = data.get('items', [])
+            
+            for item in items:
+                vol = item.get('volumeInfo', {})
+                books_list.append({
+                    'id': item.get('id'),
+                    'title': vol.get('title'),
+                    'author': ", ".join(vol.get('authors', ['Bilinmeyen Yazar'])),
+                    'image_url': vol.get('imageLinks', {}).get('thumbnail', '').replace("http:", "https:"),
+                })
+        return books_list
+        
+    except Exception as e:
+        print(f"API HATASI: {e}")
+        # Çevrimdışı Mod Verileri
         return [
-            {'id': 'y1', 'title': '1984', 'author': 'George Orwell', 'image_url': '/static/images/1984.jpg'},
-            {'id': 'y2', 'title': 'Nutuk', 'author': 'M. Kemal Atatürk', 'image_url': '/static/images/atam.jpg'},
-            {'id': 'y3', 'title': 'Sefiller', 'author': 'Victor Hugo', 'image_url': '/static/images/sefiller.jpg'},
-            {'id': 'y4', 'title': 'Suç ve Ceza', 'author': 'Dostoyevski', 'image_url': '/static/images/suc_ve_ceza.jpg'},
-            {'id': 'y5', 'title': 'Simyacı', 'author': 'Paulo Coelho', 'image_url': '/static/images/simyaci.jpg'},
-            {'id': 'y6', 'title': 'Kürk Mantolu Madonna', 'author': 'Sabahattin Ali', 'image_url': '/static/images/kurk_mantolu_madonna.jpg'},
-            {'id': 'y7', 'title': 'Yabancı', 'author': 'Albert Camus', 'image_url': '/static/images/yabanci.jpg'},
-            {'id': 'y8', 'title': 'Karamazov Kardeşler', 'author': 'Dostoyevski', 'image_url': '/static/images/karamazov.jpg'},
-            {'id': 'y9', 'title': 'Savaş ve Barış', 'author': 'Lev Tolstoy', 'image_url': '/static/images/sefiller.jpg'},
-            {'id': 'y10', 'title': 'Fahrenheit 451', 'author': 'Ray Bradbury', 'image_url': '/static/images/1984.jpg'},
+            {'id': 'y1', 'title': '1984', 'author': 'George Orwell', 'image_url': 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400'},
+            {'id': 'y2', 'title': 'Nutuk', 'author': 'M. Kemal Atatürk', 'image_url': 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400'},
+            {'id': 'y3', 'title': 'Sefiller', 'author': 'Victor Hugo', 'image_url': 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400'},
         ]
 
 # ==============================================================================
@@ -71,37 +58,31 @@ def get_books_from_api(query, max_books=240):
 # ==============================================================================
 
 def search_view(request):
-    query = request.GET.get('q')
+    query = request.GET.get('q', '').strip()
     konular = ['dünya klasikleri', 'psikoloji', 'yazılım', 'bilim kurgu', 'felsefe', 'tarih', 'roman']
     
     search_query = query if query else random.choice(konular)
     all_books = get_books_from_api(search_query)
     
-    # Sayfalama (Pagination) - Her sayfada 8 kitap
+    # Sayfalama
     paginator = Paginator(all_books, 8)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # İstatistikler ve Sidebar Verileri
-    real_comments = Comment.objects.all().order_by('-created_at')[:15]
-    total_books_count = Book.objects.count()
-    total_users_count = User.objects.count()
-    reading_count = UserBook.objects.filter(status='reading').count()
-    comment_count = Comment.objects.count()
-
+    # İstatistikler
     stats = {
-        'toplam': total_books_count,
-        'okuyan': reading_count,
-        'yorum_sayisi': comment_count
+        'toplam': Book.objects.count(),
+        'okuyan': UserBook.objects.filter(status='reading').count(),
+        'yorum_sayisi': Comment.objects.count()
     }
 
     context = {
         'books': page_obj,
-        'query': query if query else '',
-        'real_comments': real_comments,
+        'query': query,
+        'real_comments': Comment.objects.all().order_by('-created_at')[:15],
         'stats': stats,
-        'total_saved_books': total_books_count,
-        'total_users': total_users_count
+        'total_saved_books': Book.objects.count(),
+        'total_users': User.objects.count()
     }
     return render(request, 'library/search.html', context)
 
@@ -150,7 +131,6 @@ def book_detail_view(request):
             'title': 'Kitap Bilgisi Çevrimdışı',
             'author': 'Sistem Çevrimdışı Modda',
             'description': 'Şu an okul interneti üzerinden detaylı verilere ulaşılamıyor. Lütfen daha sonra tekrar deneyin.',
-            # SENİN FOTOĞRAFIN YERİNE BOŞ KAPAK GÖRSELİ:
             'image_url': 'https://via.placeholder.com/150x200.png?text=Kapak+Yok'
         }
 
@@ -190,28 +170,23 @@ def add_to_list(request):
         image_url = request.POST.get('image_url', '')
         status = request.POST.get('status', 'plan')
         
-        # 1. KORUMA KALKANI: Kitabı sadece 'title' (başlık) ile arıyoruz. 
-        # Yazar adı API'den farklı gelse bile yeni kitap üretmeyecek.
         book, book_created = Book.objects.get_or_create(
             title=title, 
             defaults={'author': author, 'image_url': image_url}
         )
         
-        # 2. KORUMA KALKANI: Kullanıcıda bu kitap zaten var mı kontrolü (update_or_create yerine get_or_create)
         user_book, ub_created = UserBook.objects.get_or_create(
             user=request.user, 
             book=book, 
             defaults={'status': status}
         )
         
-        # Ajax (Arka plan) isteği ise:
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             if ub_created:
                 return JsonResponse({'status': 'success', 'message': f'"{title}" listenize eklendi!'})
             else:
                 return JsonResponse({'status': 'info', 'message': f'"{title}" zaten kütüphanenizde mevcut!'})
         
-        # Normal sayfa yenilemeli istek ise:
         if ub_created:
             messages.success(request, f'"{title}" kütüphanenize eklendi.')
         else:
@@ -304,17 +279,14 @@ def chat_view(request):
         content = request.POST.get('content', '').strip()
         if content:
             ChatMessage.objects.create(user=request.user, content=content)
-            # AJAX isteği ise sayfayı yenileme, sadece 'başarılı' yanıtı dön
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'success'})
             return redirect('chat')
             
-    # Artık HTML şablonuna mesajları buradan yollamıyoruz, JS kendi çekecek
     return render(request, 'library/chat.html')
 
 @login_required
 def get_chat_messages(request):
-    """Arka planda JS'in her 2 saniyede bir veri çektiği gizli köprü"""
     messages = ChatMessage.objects.all().order_by('created_at')
     msg_list = []
     
