@@ -22,8 +22,8 @@ INSTALLED_APPS = [
     'library',
     
     # Tasarım Paketleri
-    #'crispy_forms',
-    #'crispy_bootstrap5',
+    'crispy_forms',
+    'crispy_bootstrap5',
 ]
 
 # ARA KATMANLAR
@@ -85,8 +85,8 @@ LOGOUT_REDIRECT_URL = 'login'
 LOGIN_URL = 'login'
 
 # CRISPY FORMS AYARLARI
-#CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
-#CRISPY_TEMPLATE_PACK = "bootstrap5"
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # E-POSTA AYARLARI (Şifre Sıfırlama İçin)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
